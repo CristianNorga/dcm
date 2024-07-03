@@ -5,9 +5,13 @@ export default defineNuxtConfig({
 	serverDir: './src/2-infrastructure/Server',
 	components: [
 		{
-			path: '~/Components',
+			path: './Components',
 		},
 	],
+	dir: {
+		layouts: './Layouts',
+		pages: './Pages',
+	},
 	alias: {
 		'@models': path.resolve(__dirname, './src/3-application/Models'),
 		'@stores': path.resolve(__dirname, './src/3-application/Stores'),
@@ -15,16 +19,30 @@ export default defineNuxtConfig({
 		'@interfaces': path.resolve(__dirname, './src/3-application/Interfaces'),
 		'@entities': path.resolve(__dirname, './src/3-application/Entities'),
 	},
-	modules: ['nuxt-mongoose', '@vueuse/nuxt', '@nuxt/ui', '@pinia/nuxt'],
-	mongoose: {
-		uri: 'mongodb+srv://admin:Z6aSZeHFTrhaAbE6@cluster.ctsee.mongodb.net/?retryWrites=true&w=majority&appName=cluster',
-		//uri: 'process.env.MONGODB_URI',
-		options: {},
-		modelsDir: 'src/3-application/Models/Mongo',
-		devtools: true,
-	},
+	modules: [
+		// 'nuxt-mongoose',
+		'@vueuse/nuxt',
+		'@nuxt/ui',
+		'@pinia/nuxt',
+	],
+	// mongoose: {
+	// 	uri: 'mongodb+srv://admin:Z6aSZeHFTrhaAbE6@cluster.ctsee.mongodb.net/?retryWrites=true&w=majority&appName=cluster',
+	// 	//uri: 'process.env.MONGODB_URI',
+	// 	options: {},
+	// 	modelsDir: 'src/3-application/Models/Mongo',
+	// 	devtools: true,
+	// },
 	pinia: {
 		storesDirs: ['./src/3-application/Stores/**'],
+	},
+	tailwindcss: {
+		cssPath: ['~/assets/css/tailwind.css', { injectPosition: 'last' }],
+		configPath: 'tailwind.config',
+		exposeConfig: {
+			level: 2,
+		},
+		config: {},
+		viewer: true,
 	},
 	devtools: { enabled: true },
 });
