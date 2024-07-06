@@ -42,7 +42,31 @@ const router = useRouter();
 								role="button"
 							>
 								<button @click="router.push('/resources')" class="text-sm/6 font-semibold flex items-center gap-1 text-primary">
-									Services
+									Recursos
+								</button>
+							</div>
+						</div>
+					</li>
+					<li class="relative">
+						<div class="relative">
+							<div
+								class="inline-flex w-full"
+								role="button"
+							>
+								<button @click="router.push('/boards')" class="text-sm/6 font-semibold flex items-center gap-1 text-primary">
+									Tableros
+								</button>
+							</div>
+						</div>
+					</li>
+					<li class="relative">
+						<div class="relative">
+							<div
+								class="inline-flex w-full"
+								role="button"
+							>
+								<button class="text-sm/6 font-semibold flex items-center gap-1 text-primary">
+									Migraciones
 								</button>
 							</div>
 						</div>
