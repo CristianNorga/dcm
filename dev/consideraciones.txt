@@ -1,0 +1,24 @@
+* en vez de buscar dentro de los elementos la 
+identificacion, se pasa ya la identificacion del elemento en el elemento.
+
+*ele_selected = selectedElement.selected
+
+*node_selected = nodes.selected
+
+*connection_selected = graph.selected
+
+*0 = null,false, only nodes y graphs
+
+*d = pathToDraw
+
+*elements precanvas(drawflow) & container(parent-drawflow) = vue parent
+
+*render = vue api original
+
+*click.switch.element.output = start connection
+
+--reroute_fix_curvature siempre tiene un valor de false. por ende tiende a desaparecer
+
+!se tiene que desarrollar un metodo para reutilizar el espacio de los nodos y grafos al cambiar de board. ~consultar sobre referencias y links
+
+--se elimina getModuleFromNodeId ya que tiene una complejidad de tiempo alta de O(n^2)

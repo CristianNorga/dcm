@@ -17,7 +17,9 @@ export default defineNuxtConfig({
 		'@stores': path.resolve(__dirname, './src/3-application/Stores'),
 		'@enums': path.resolve(__dirname, './src/3-application/Enums'),
 		'@interfaces': path.resolve(__dirname, './src/3-application/Interfaces'),
+		'@types': path.resolve(__dirname, './src/3-application/Types'),
 		'@entities': path.resolve(__dirname, './src/3-application/Entities'),
+		'@components': path.resolve(__dirname, './src/1-presentation/Components'),
 	},
 	modules: [
 		// 'nuxt-mongoose',
@@ -26,8 +28,7 @@ export default defineNuxtConfig({
 		'@pinia/nuxt',
 	],
 	// mongoose: {
-	// 	uri: 'mongodb+srv://admin:Z6aSZeHFTrhaAbE6@cluster.ctsee.mongodb.net/?retryWrites=true&w=majority&appName=cluster',
-	// 	//uri: 'process.env.MONGODB_URI',
+	// 	uri: 'process.env.MONGODB_URI',
 	// 	options: {},
 	// 	modelsDir: 'src/3-application/Models/Mongo',
 	// 	devtools: true,
