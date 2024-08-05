@@ -1,6 +1,10 @@
 <script setup>
 import { element } from '@enums/DrawFlow.enum';
 const storeDrawFlow = useDrawFlowStore();
+
+onMounted(() => {
+  storeDrawFlow.setDrawFlowParent(drawFlowParent.value);
+});
 // render: render, no necesary
 // container: container and parent: parent are drawFlowParent
 

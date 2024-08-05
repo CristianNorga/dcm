@@ -3,32 +3,40 @@ import type { Events } from '../Types/DrawFlow/Events';
 import type {
 	ElementStates,
 	GraphStates,
-	Node,
+	Board,
+	Graph
 } from '../Types/DrawFlow/Element';
-import { element } from '@enums/DrawFlow.enum';
+import { element, statusLife } from '@enums/DrawFlow.enum';
 import Generator from '../Common/Helpers/generator'
 
 export const useDrawFlowStore = defineStore('utilsStore', {
 	state: () => ({
 		//custom
+		parent: new HTMLElement(),
 		boards: {
-			selected: "Home",
-			Home: {
-				data: {
-					nodes: [] as Node[],
-					graphs: [],
+			selected: 'Home',
+			removed: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+			items: [
+				{
+					name: 'Home',
+					version: 'aztmz-satpb',
+					data: {
+						nodes: {},
+						graphs: {},
+					},
 				},
-			}
-		},
+			],
+		} as Board,
 		nodes: {
 			selected: 0,
 			removed: [],
-			items: {},
+			items: {} as { [key: number]: Node },
 		} as ElementStates,
 		graphs: {
 			selected: 0,
 			removed: [],
-			items: {},
+			refKeys: [],
+			items: {} as { [key: number]: Graph },
 		} as ElementStates,
 		selectedElement: {
 			type: '' as element,
@@ -41,8 +49,6 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 		// container: container, drawFlowParent
 		precanvas: null,
 		nodeId: 1,
-		ele_selected: '' as string,
-		node_selected: null,
 		drag: false,
 		reroute: false,
 		curvature: 0.5,
@@ -52,8 +58,6 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 		drag_point: false,
 		editor_selected: false,
 		connection: false,
-		connection_ele: null,
-		connection_selected: null,
 		canvas_x: 0,
 		canvas_y: 0,
 		pos_x: 0,
@@ -87,8 +91,11 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 	}),
 	actions: {
 		//custom
+		setDrawFlowParent(parent: HTMLElement) {
+			this.parent = parent;
+		},
 		startBase(
-			context: MouseEvent,
+			context: MouseEvent & TouchEvent,
 			clickedElement: element,
 			id: number = 0
 		): boolean {
@@ -108,16 +115,16 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 				id: id,
 			};
 
-			if (context.button === 0) {
+			if (context?.button === 0) {
 				this.contextmenuDel();
 			}
 
 			return true;
 		},
 		startConnection(
-			context: MouseEvent,
+			context: MouseEvent & TouchEvent,
 			clickedElement: element,
-			id: number = 0,
+			id: number,
 			outPut: string
 		) {
 			if (!this.startBase(context, clickedElement, id)) return false;
@@ -133,7 +140,7 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 			this.drawConnection(id, outPut);
 		},
 		deleteElement(
-			context: MouseEvent,
+			context: MouseEvent & TouchEvent,
 			clickedElement: element,
 			id: number = 0
 		) {
@@ -158,10 +165,126 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 		dragEnd(context: any) {
 			return console.log('dragEnd', context);
 		},
-		position(context: any) {
-			console.log('position', context);
+		position(context: MouseEvent & TouchEvent) {
+			let e_pos_x, e_pos_y;
+
+			if (context.type === 'touchmove') {
+				e_pos_x = context.touches[0].clientX;
+				e_pos_y = context.touches[0].clientY;
+			} else {
+				e_pos_x = context.clientX;
+				e_pos_y = context.clientY;
+			}
+
+			if (this.connection) {
+				this.updateConnection(e_pos_x, e_pos_y);
+			}
+			if (this.editor_selected) {
+				x = this.canvas_x + -(this.pos_x - e_pos_x);
+				y = this.canvas_y + -(this.pos_y - e_pos_y);
+				this.dispatch('translate', { x: x, y: y });
+				this.precanvas.style.transform =
+					'translate(' + x + 'px, ' + y + 'px) scale(' + this.zoom + ')';
+			}
+			if (this.drag) {
+				context.preventDefault();
+				var x =
+					((this.pos_x - e_pos_x) * this.precanvas.clientWidth) /
+					(this.precanvas.clientWidth * this.zoom);
+				var y =
+					((this.pos_y - e_pos_y) * this.precanvas.clientHeight) /
+					(this.precanvas.clientHeight * this.zoom);
+				this.pos_x = e_pos_x;
+				this.pos_y = e_pos_y;
+
+				this.ele_selected.style.top = this.ele_selected.offsetTop - y + 'px';
+				this.ele_selected.style.left = this.ele_selected.offsetLeft - x + 'px';
+
+				this.drawflow.drawflow[this.module].data[
+					this.ele_selected.id.slice(5)
+				].pos_x = this.ele_selected.offsetLeft - x;
+				this.drawflow.drawflow[this.module].data[
+					this.ele_selected.id.slice(5)
+				].pos_y = this.ele_selected.offsetTop - y;
+
+				this.updateConnectionNodes(this.ele_selected.id);
+			}
+
+			if (this.drag_point) {
+				var x =
+					((this.pos_x - e_pos_x) * this.precanvas.clientWidth) /
+					(this.precanvas.clientWidth * this.zoom);
+				var y =
+					((this.pos_y - e_pos_y) * this.precanvas.clientHeight) /
+					(this.precanvas.clientHeight * this.zoom);
+				this.pos_x = e_pos_x;
+				this.pos_y = e_pos_y;
+
+				var pos_x =
+					this.pos_x *
+						(this.precanvas.clientWidth / (this.precanvas.clientWidth * this.zoom)) -
+					this.precanvas.getBoundingClientRect().x *
+						(this.precanvas.clientWidth / (this.precanvas.clientWidth * this.zoom));
+				var pos_y =
+					this.pos_y *
+						(this.precanvas.clientHeight /
+							(this.precanvas.clientHeight * this.zoom)) -
+					this.precanvas.getBoundingClientRect().y *
+						(this.precanvas.clientHeight / (this.precanvas.clientHeight * this.zoom));
+
+				this.ele_selected.setAttributeNS(null, 'cx', pos_x);
+				this.ele_selected.setAttributeNS(null, 'cy', pos_y);
+
+				const nodeUpdate = this.ele_selected.parentElement.classList[2].slice(9);
+				const nodeUpdateIn = this.ele_selected.parentElement.classList[1].slice(13);
+				const output_class = this.ele_selected.parentElement.classList[3];
+				const input_class = this.ele_selected.parentElement.classList[4];
+
+				let numberPointPosition =
+					Array.from(this.ele_selected.parentElement.children).indexOf(
+						this.ele_selected
+					) - 1;
+
+				if (this.reroute_fix_curvature) {
+					const numberMainPath =
+						this.ele_selected.parentElement.querySelectorAll('.main-path').length - 1;
+					numberPointPosition -= numberMainPath;
+					if (numberPointPosition < 0) {
+						numberPointPosition = 0;
+					}
+				}
+
+				const nodeId = nodeUpdate.slice(5);
+				const searchConnection = this.drawflow.drawflow[this.module].data[
+					nodeId
+				].outputs[output_class].connections.findIndex(function (item, i) {
+					return item.node === nodeUpdateIn && item.output === input_class;
+				});
+
+				this.drawflow.drawflow[this.module].data[nodeId].outputs[
+					output_class
+				].connections[searchConnection].points[numberPointPosition] = {
+					pos_x: pos_x,
+					pos_y: pos_y,
+				};
+
+				const parentSelected =
+					this.ele_selected.parentElement.classList[2].slice(9);
+
+				this.updateConnectionNodes(parentSelected);
+			}
+
+			if (context.type === 'touchmove') {
+				this.mouse_x = e_pos_x;
+				this.mouse_y = e_pos_y;
+			}
+			this.dispatch('mouseMove', { x: e_pos_x, y: e_pos_y });
 		},
-		click(context: MouseEvent, clickedElement: element, id: number = 0) {
+		click(
+			context: MouseEvent & TouchEvent,
+			clickedElement: element,
+			id: number = 0
+		) {
 			if (!this.startBase(context, clickedElement, id)) return false;
 
 			switch (clickedElement) {
@@ -214,10 +337,10 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 
 					if (this.graphs.items[this.graphs.selected] !== undefined) {
 						this.dispatch('connectionSelected', {
-							output_id: this.graphs.items[this.graphs.selected].nodeOut,
-							input_id: this.graphs.items[this.graphs.selected].nodeIn,
-							output_class: this.graphs.items[this.graphs.selected].output,
-							input_class: this.graphs.items[this.graphs.selected].input,
+							output_id: this.graphs.items[this.graphs.selected].state.nodeOut,
+							input_id: this.graphs.items[this.graphs.selected].state.nodeIn,
+							output_class: this.graphs.items[this.graphs.selected].state.output,
+							input_class: this.graphs.items[this.graphs.selected].state.input,
 						});
 					}
 					break;
@@ -239,10 +362,11 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 				this.pos_y = context.clientY;
 				this.pos_y_start = context.clientY;
 			}
+			// 'input', 'output', 'main-path']
 			if (
-				['input', 'output', 'main-path'].includes(
-					this.selectedElement.id.classList[0]
-				)
+				this.selectedElement.type == element.Graph ||
+				this.selectedElement.type == element.Output ||
+				this.selectedElement.type == element.Input
 			) {
 				context.preventDefault();
 			}
@@ -264,20 +388,69 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 			console.log('dblclick', context);
 		},
 		// Draw
-		drawConnection(idNode: number, idOutPut: string) {
+		drawConnection(nodeId: number, idOutPut: string) {
 			let id = Generator.idBaseRamdom();
 			this.graphs.items[id] = {
-				pathToDraw: '',
-				nodeIn: '',
-				nodeOut: '',
-				input: '',
-				output: '',
-			} as GraphStates;
+				id: id,
+				name: 'Connection',
+				state: {
+					status: statusLife.Active,
+					pathToDraw: '',
+					nodeIn: 0,
+					nodeOut: nodeId,
+					input: '',
+					output: idOutPut,
+				},
+				data: {},
+			} as Graph;
+			this.nodes.selected = nodeId;
 			this.graphs.selected = id;
+			this.selectedElement.id = id; //sobra?
+			this.selectedElement.type = element.Graph;
 			this.dispatch('connectionStart', {
-				output_id: idNode,
+				output_id: nodeId,
 				output_class: idOutPut,
 			});
+		},
+		updateConnection(eX: number, eY: number) {
+			const zoom = this.configurableOptions.zoom;
+			let precanvasWitdhZoom = this.parent.clientWidth / (this.parent.clientWidth * zoom);
+			precanvasWitdhZoom = precanvasWitdhZoom || 0;
+			let precanvasHeightZoom = this.parent.clientHeight / (this.parent.clientHeight * zoom);
+			precanvasHeightZoom = precanvasHeightZoom || 0;
+
+			var line_x =
+				this.nodes.items[this.nodes.selected].offsetWidth / 2 + //cambiar any a node explicitamente
+				(this.ele_selected.getBoundingClientRect().x -
+					this.parent.getBoundingClientRect().x) *
+					precanvasWitdhZoom;
+			var line_y =
+				this.ele_selected.offsetHeight / 2 +
+				(this.ele_selected.getBoundingClientRect().y -
+					this.parent.getBoundingClientRect().y) *
+					precanvasHeightZoom;
+
+			var x =
+				eX *
+					(this.parent.clientWidth / (this.parent.clientWidth * this.zoom)) -
+				this.parent.getBoundingClientRect().x *
+					(this.parent.clientWidth / (this.parent.clientWidth * this.zoom));
+			var y =
+				eY *
+					(this.parent.clientHeight / (this.parent.clientHeight * this.zoom)) -
+				this.parent.getBoundingClientRect().y *
+					(this.parent.clientHeight / (this.parent.clientHeight * this.zoom));
+
+			var curvature = this.curvature;
+			var lineCurve = this.createCurvature(
+				line_x,
+				line_y,
+				x,
+				y,
+				curvature,
+				'openclose'
+			);
+			this.graphs.items[this.graphs.selected].state.pathToDraw = lineCurve;
 		},
 		// Events
 		dispatch(event: string, details: any) {
@@ -292,23 +465,39 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 		},
 		// Nodes
 		removeNodeId(id: number) {
+			this.removeConnectionNodeId(this.nodes.items[id].masterId ?? '');
+
 			// this.nodes.removed.push(id);
-			// delete this.nodes.items[id];
-			// this.nodes.selected = 0;
-			this.removeConnectionNodeId(id);
-			this.boards[this.boards.selected].data.nodes = this.boards[
-				this.boards.selected
-			].data.nodes.filter((node) => node.id !== id);
-			delete this.drawflow.drawflow[moduleName].data[id.slice(5)];
+			//🚩BACK(actualizar reactivamente)
+			delete this.nodes.items[id];
+			// ejemplo de remover de manera temporal (guardado por commit)
+			// this.nodes.items[id].state.status = statusLife.Removed;
+
+			this.nodes.selected = 0;
 			this.dispatch('nodeRemoved', id);
 		},
 		// Graph
 		removeReouteConnectionSelected() {
 			this.dispatch('connectionUnselected', true);
 		},
-		removeConnection() {
-		},
-		removeConnectionNodeId(id: number) {
+		removeConnection() {},
+		removeConnectionNodeId(masterId: string) {
+			//delete graph in the current board
+			//🚩BACK(actualizar reactivamente)
+			Object.keys(this.graphs.items).forEach((item) => {
+				if (
+					this.graphs.items[item].state.nodeIn === masterId ||
+					this.graphs.items[item].state.nodeOut === masterId
+				) {
+					delete this.graphs.items[item];
+					this.dispatch('connectionRemoved', {
+						output_id: this.graphs.items[item].state.nodeOut,
+						input_id: this.graphs.items[item].state.nodeIn,
+						output_class: this.graphs.items[item].state.output,
+						input_class: this.graphs.items[item].state.input,
+					});
+				}
+			});
 		},
 		// Zoom
 		zoom_enter(context: any) {

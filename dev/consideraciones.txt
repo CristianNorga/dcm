@@ -11,7 +11,7 @@ identificacion, se pasa ya la identificacion del elemento en el elemento.
 
 *d = pathToDraw
 
-*elements precanvas(drawflow) & container(parent-drawflow) = vue parent
+*elements precanvas(drawflow) & container(parent-drawflow) = vue parent => parent
 
 *render = vue api original
 
@@ -22,3 +22,9 @@ identificacion, se pasa ya la identificacion del elemento en el elemento.
 !se tiene que desarrollar un metodo para reutilizar el espacio de los nodos y grafos al cambiar de board. ~consultar sobre referencias y links
 
 --se elimina getModuleFromNodeId ya que tiene una complejidad de tiempo alta de O(n^2)
+
+!se tiene que desarrollar metodos para guardar cambios en el board o de manera global, donde el global actualice los servicios y grafos en mongo. el guardado normal solo afecta los grafos y servicios dentro de la board
+
+--los grafos y nodos dentro de la board al pasar a primer plano se pasa su contenido a la raiz del store del drawflow, por ende solo se actualiza en un sitio 
+
+*connection_ele hace referencia al elemento HTML, la cual no es necesaria ya que podemos acceder a la data previamente guardada en el store
