@@ -4,28 +4,16 @@ export type ElementStates = {
 	selected: number;
 	removed: Array<number>;
 	refKeys?: Array<RefKey>;
-	items: any;
 };
 
-// export type ElementStates = {
-// 	selected: number;
-// 	removed: Array<number>;
-// 	refKeys?: Array<RefKey>;
-// 	items: {
-// 		[key: number]: Node & Graph;
-// 	};
-// };
-
-// export type ElementStates = {
-// 	selected: number;
-// 	removed: Array<number>;
-// 	refKeys?: Array<RefKey>;
-// 	items: {
-// 		[key: number]: Node & Graph;
-// 	};
-// };
-
 //graphs
+export type Graph = {
+	id: number;
+	name: string;
+	state: GraphStates;
+	point: Array<PositionStates>;
+	data: any;
+};
 export type GraphStates = {
 	status: statusLife;
 	pathToDraw: string;
@@ -33,13 +21,6 @@ export type GraphStates = {
 	nodeOut: number;
 	input: string;
 	output: string;
-};
-
-export type Graph = {
-	id: number;
-	name: string;
-	state: GraphStates;
-	data: any;
 };
 
 export type RefKey = {
@@ -59,13 +40,13 @@ export type NodeStates = {
 };
 
 export type Node = {
-	masterId?: string;
+	masterId: string;
 	id: number;
 	name: string;
 	state: NodeStates;
-	data: any;
 	inputs: { [key: string]: PositionStates };
 	outputs: { [key: string]: PositionStates };
+	data: any;
 };
 
 //board

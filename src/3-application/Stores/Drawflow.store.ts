@@ -2,11 +2,11 @@ import { defineStore } from 'pinia';
 import type { Events } from '../Types/DrawFlow/Events';
 import type {
 	ElementStates,
-	GraphStates,
 	Board,
-	Graph
+	Graph,
+	Node
 } from '../Types/DrawFlow/Element';
-import { element, statusLife } from '@enums/DrawFlow.enum';
+import { connection, element, statusLife } from '@enums/DrawFlow.enum';
 import Generator from '../Common/Helpers/generator'
 
 export const useDrawFlowStore = defineStore('utilsStore', {
@@ -30,14 +30,18 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 		nodes: {
 			selected: 0,
 			removed: [],
-			items: {} as { [key: number]: Node },
-		} as ElementStates,
+			items: {},
+		} as ElementStates & { items: {[key: number]: Node}},
 		graphs: {
 			selected: 0,
 			removed: [],
-			refKeys: [],
-			items: {} as { [key: number]: Graph },
-		} as ElementStates,
+			items: {},
+		} as ElementStates & { items: {[key: number]: Graph} },
+		connections: {
+			startIn: connection.Inputs,
+			inputs: '',
+			outputs: '',
+		} as { inputs: string; outputs: string, startIn: connection.Inputs | connection.Outputs },
 		selectedElement: {
 			type: '' as element,
 			id: 0 as number,
@@ -51,9 +55,8 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 		nodeId: 1,
 		drag: false,
 		reroute: false,
+		reroute_fix_curvature: false,
 		curvature: 0.5,
-		reroute_curvature_start_end: 0.5,
-		reroute_curvature: 0.5,
 		reroute_width: 6,
 		drag_point: false,
 		editor_selected: false,
@@ -166,7 +169,7 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 			return console.log('dragEnd', context);
 		},
 		position(context: MouseEvent & TouchEvent) {
-			let e_pos_x, e_pos_y;
+			let e_pos_x, e_pos_y, x, y;
 
 			if (context.type === 'touchmove') {
 				e_pos_x = context.touches[0].clientX;
@@ -183,95 +186,50 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 				x = this.canvas_x + -(this.pos_x - e_pos_x);
 				y = this.canvas_y + -(this.pos_y - e_pos_y);
 				this.dispatch('translate', { x: x, y: y });
-				this.precanvas.style.transform =
-					'translate(' + x + 'px, ' + y + 'px) scale(' + this.zoom + ')';
+				this.parent.style.transform =
+					'translate(' + x + 'px, ' + y + 'px) scale(' + this.configurableOptions.zoom + ')';
 			}
 			if (this.drag) {
 				context.preventDefault();
-				var x =
-					((this.pos_x - e_pos_x) * this.precanvas.clientWidth) /
-					(this.precanvas.clientWidth * this.zoom);
-				var y =
-					((this.pos_y - e_pos_y) * this.precanvas.clientHeight) /
-					(this.precanvas.clientHeight * this.zoom);
+				x =
+					((this.pos_x - e_pos_x) * this.parent.clientWidth) /
+					(this.parent.clientWidth * this.configurableOptions.zoom);
+				y =
+					((this.pos_y - e_pos_y) * this.parent.clientHeight) /
+					(this.parent.clientHeight * this.configurableOptions.zoom);
 				this.pos_x = e_pos_x;
 				this.pos_y = e_pos_y;
 
-				this.ele_selected.style.top = this.ele_selected.offsetTop - y + 'px';
-				this.ele_selected.style.left = this.ele_selected.offsetLeft - x + 'px';
+				this.nodes.items[this.nodes.selected].state.x = this.nodes.items[
+					this.nodes.selected
+				].state.x - x;
+				this.nodes.items[this.nodes.selected].state.y = this.nodes.items[
+					this.nodes.selected
+				].state.y - y;
 
-				this.drawflow.drawflow[this.module].data[
-					this.ele_selected.id.slice(5)
-				].pos_x = this.ele_selected.offsetLeft - x;
-				this.drawflow.drawflow[this.module].data[
-					this.ele_selected.id.slice(5)
-				].pos_y = this.ele_selected.offsetTop - y;
-
-				this.updateConnectionNodes(this.ele_selected.id);
+				this.updateConnectionNodes(this.nodes.selected);
 			}
 
 			if (this.drag_point) {
-				var x =
-					((this.pos_x - e_pos_x) * this.precanvas.clientWidth) /
-					(this.precanvas.clientWidth * this.zoom);
-				var y =
-					((this.pos_y - e_pos_y) * this.precanvas.clientHeight) /
-					(this.precanvas.clientHeight * this.zoom);
 				this.pos_x = e_pos_x;
 				this.pos_y = e_pos_y;
 
-				var pos_x =
+				let pos_x =
 					this.pos_x *
-						(this.precanvas.clientWidth / (this.precanvas.clientWidth * this.zoom)) -
-					this.precanvas.getBoundingClientRect().x *
-						(this.precanvas.clientWidth / (this.precanvas.clientWidth * this.zoom));
-				var pos_y =
+						(this.parent.clientWidth / (this.parent.clientWidth * this.configurableOptions.zoom)) -
+					this.parent.getBoundingClientRect().x *
+						(this.parent.clientWidth / (this.parent.clientWidth * this.configurableOptions.zoom));
+				let pos_y =
 					this.pos_y *
-						(this.precanvas.clientHeight /
-							(this.precanvas.clientHeight * this.zoom)) -
-					this.precanvas.getBoundingClientRect().y *
-						(this.precanvas.clientHeight / (this.precanvas.clientHeight * this.zoom));
+						(this.parent.clientHeight /
+							(this.parent.clientHeight * this.configurableOptions.zoom)) -
+					this.parent.getBoundingClientRect().y *
+						(this.parent.clientHeight / (this.parent.clientHeight * this.configurableOptions.zoom));
+				
+				this.graphs.items[this.graphs.selected].point[this.selectedElement.id].pos_x = pos_x;
+				this.graphs.items[this.graphs.selected].point[this.selectedElement.id].pos_y = pos_y;
 
-				this.ele_selected.setAttributeNS(null, 'cx', pos_x);
-				this.ele_selected.setAttributeNS(null, 'cy', pos_y);
-
-				const nodeUpdate = this.ele_selected.parentElement.classList[2].slice(9);
-				const nodeUpdateIn = this.ele_selected.parentElement.classList[1].slice(13);
-				const output_class = this.ele_selected.parentElement.classList[3];
-				const input_class = this.ele_selected.parentElement.classList[4];
-
-				let numberPointPosition =
-					Array.from(this.ele_selected.parentElement.children).indexOf(
-						this.ele_selected
-					) - 1;
-
-				if (this.reroute_fix_curvature) {
-					const numberMainPath =
-						this.ele_selected.parentElement.querySelectorAll('.main-path').length - 1;
-					numberPointPosition -= numberMainPath;
-					if (numberPointPosition < 0) {
-						numberPointPosition = 0;
-					}
-				}
-
-				const nodeId = nodeUpdate.slice(5);
-				const searchConnection = this.drawflow.drawflow[this.module].data[
-					nodeId
-				].outputs[output_class].connections.findIndex(function (item, i) {
-					return item.node === nodeUpdateIn && item.output === input_class;
-				});
-
-				this.drawflow.drawflow[this.module].data[nodeId].outputs[
-					output_class
-				].connections[searchConnection].points[numberPointPosition] = {
-					pos_x: pos_x,
-					pos_y: pos_y,
-				};
-
-				const parentSelected =
-					this.ele_selected.parentElement.classList[2].slice(9);
-
-				this.updateConnectionNodes(parentSelected);
+				this.updateConnectionNodes(this.nodes.selected);
 			}
 
 			if (context.type === 'touchmove') {
@@ -413,44 +371,155 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 			});
 		},
 		updateConnection(eX: number, eY: number) {
-			const zoom = this.configurableOptions.zoom;
-			let precanvasWitdhZoom = this.parent.clientWidth / (this.parent.clientWidth * zoom);
-			precanvasWitdhZoom = precanvasWitdhZoom || 0;
-			let precanvasHeightZoom = this.parent.clientHeight / (this.parent.clientHeight * zoom);
-			precanvasHeightZoom = precanvasHeightZoom || 0;
+			const nodeConnection = this.nodes.items
+				[this.nodes.selected][this.connections.startIn]
+				[this.connections[this.connections.startIn]];
+			let parentWitdhZoom = this.parent.clientWidth / (this.parent.clientWidth * this.configurableOptions.zoom);
+			parentWitdhZoom = parentWitdhZoom || 0;
+			let parentHeightZoom = this.parent.clientHeight / (this.parent.clientHeight * this.configurableOptions.zoom);
+			parentHeightZoom = parentHeightZoom || 0;
 
 			var line_x =
-				this.nodes.items[this.nodes.selected].offsetWidth / 2 + //cambiar any a node explicitamente
-				(this.ele_selected.getBoundingClientRect().x -
-					this.parent.getBoundingClientRect().x) *
-					precanvasWitdhZoom;
-			var line_y =
-				this.ele_selected.offsetHeight / 2 +
-				(this.ele_selected.getBoundingClientRect().y -
-					this.parent.getBoundingClientRect().y) *
-					precanvasHeightZoom;
+				nodeConnection.offsetWidth / 2 +
+				nodeConnection.pos_x -
+				this.parent.getBoundingClientRect().x * parentWitdhZoom;
 
+			var line_y = nodeConnection.offsetHeight / 2 + (nodeConnection.pos_y) - this.parent.getBoundingClientRect().y * parentHeightZoom;
+			
 			var x =
 				eX *
-					(this.parent.clientWidth / (this.parent.clientWidth * this.zoom)) -
+					(this.parent.clientWidth / (this.parent.clientWidth * this.configurableOptions.zoom)) -
 				this.parent.getBoundingClientRect().x *
-					(this.parent.clientWidth / (this.parent.clientWidth * this.zoom));
+					(this.parent.clientWidth / (this.parent.clientWidth * this.configurableOptions.zoom));
 			var y =
 				eY *
-					(this.parent.clientHeight / (this.parent.clientHeight * this.zoom)) -
+					(this.parent.clientHeight / (this.parent.clientHeight * this.configurableOptions.zoom)) -
 				this.parent.getBoundingClientRect().y *
-					(this.parent.clientHeight / (this.parent.clientHeight * this.zoom));
+					(this.parent.clientHeight / (this.parent.clientHeight * this.configurableOptions.zoom));
 
-			var curvature = this.curvature;
 			var lineCurve = this.createCurvature(
 				line_x,
 				line_y,
 				x,
 				y,
-				curvature,
 				'openclose'
 			);
 			this.graphs.items[this.graphs.selected].state.pathToDraw = lineCurve;
+		},
+		updateConnectionNodes(id: number) {
+			const precanvas = this.parent;
+			const zoom = this.configurableOptions.zoom;
+			let parentWitdhZoom =
+				this.parent.clientWidth / (this.parent.clientWidth * zoom);
+			parentWitdhZoom = parentWitdhZoom || 0;
+			let parentHeightZoom =
+				this.parent.clientHeight /
+				(this.parent.clientHeight * zoom);
+			parentHeightZoom = parentHeightZoom || 0;
+
+			const elemsOut = Object.keys(this.graphs.items)
+				.filter((key) => 
+					this.graphs.items[Number.parseInt(key)].state.nodeOut === id
+				)
+				.map((key) => Number.parseInt(key));
+
+			let line_x,line_y,eX,eY = 0;
+			elemsOut.forEach((key) => {
+				if (this.graphs.items[key].point.length === 0) {
+
+					let nodeRelationId = this.graphs.items[key].state.nodeIn;
+
+					let inputRelation = this.nodes.items[nodeRelationId].inputs[
+						this.graphs.items[key].state.output
+					];
+
+					eX = inputRelation.offsetWidth / 2 + inputRelation.pos_x - precanvas.getBoundingClientRect().x * parentWitdhZoom;
+
+					eY = inputRelation.offsetHeight / 2 + inputRelation.pos_y - precanvas.getBoundingClientRect().y * parentHeightZoom;
+
+					let outputRelation = this.nodes.items[id].outputs[
+						this.graphs.items[key].state.input
+					];
+
+					line_x = outputRelation.offsetWidth / 2 + outputRelation.pos_x - precanvas.getBoundingClientRect().x * parentWitdhZoom;
+
+					line_y = outputRelation.offsetHeight / 2 + outputRelation.pos_y - precanvas.getBoundingClientRect().y * parentHeightZoom;
+
+					const lineCurve = this.createCurvature(
+						line_x,
+						line_y,
+						eX,
+						eY,
+						'openclose'
+					);
+
+					this.graphs.items[key].state.pathToDraw = lineCurve;
+
+				} else {
+					//points disabled temporaly
+				}
+			});
+		},
+		createCurvature(
+			start_x: number,
+			start_y: number,
+			end_x: number,
+			end_y: number,
+			type: string
+		) {
+			let hx1, hx2 = 0;
+			//type openclose open close other
+			switch (type) {
+				case 'open':
+					if (start_x >= end_x) {
+						hx1 = start_x + Math.abs(end_x - start_x) * this.curvature;
+						hx2 = end_x - Math.abs(end_x - start_x) * (this.curvature * -1);
+					} else {
+						hx1 = start_x + Math.abs(end_x - start_x) * this.curvature;
+						hx2 = end_x - Math.abs(end_x - start_x) * this.curvature;
+					}
+					break;
+				case 'close':
+					if (start_x >= end_x) {
+						hx1 = start_x + Math.abs(end_x - start_x) * (this.curvature * -1);
+						hx2 = end_x - Math.abs(end_x - start_x) * this.curvature;
+					} else {
+						hx1 = start_x + Math.abs(end_x - start_x) * this.curvature;
+						hx2 = end_x - Math.abs(end_x - start_x) * this.curvature;
+					}
+					break;
+				case 'other':
+					if (start_x >= end_x) {
+						hx1 = start_x + Math.abs(end_x - start_x) * (this.curvature * -1);
+						hx2 = end_x - Math.abs(end_x - start_x) * (this.curvature * -1);
+					} else {
+						hx1 = start_x + Math.abs(end_x - start_x) * this.curvature;
+						hx2 = end_x - Math.abs(end_x - start_x) * this.curvature;
+					}
+					break;
+				default:
+					hx1 = start_x + Math.abs(end_x - start_x) * this.curvature;
+					hx2 = end_x - Math.abs(end_x - start_x) * this.curvature;
+			}
+
+			return (
+				' M ' +
+				start_x +
+				' ' +
+				start_y +
+				' C ' +
+				hx1 +
+				' ' +
+				start_y +
+				' ' +
+				hx2 +
+				' ' +
+				end_y +
+				' ' +
+				end_x +
+				'  ' +
+				end_y
+			);
 		},
 		// Events
 		dispatch(event: string, details: any) {
@@ -465,7 +534,7 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 		},
 		// Nodes
 		removeNodeId(id: number) {
-			this.removeConnectionNodeId(this.nodes.items[id].masterId ?? '');
+			this.removeConnectionNodeId(id ?? 0);
 
 			// this.nodes.removed.push(id);
 			//🚩BACK(actualizar reactivamente)
@@ -481,20 +550,21 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 			this.dispatch('connectionUnselected', true);
 		},
 		removeConnection() {},
-		removeConnectionNodeId(masterId: string) {
+		removeConnectionNodeId(nodeId: number) {
 			//delete graph in the current board
 			//🚩BACK(actualizar reactivamente)
 			Object.keys(this.graphs.items).forEach((item) => {
+				const key = Number.parseInt(item);
 				if (
-					this.graphs.items[item].state.nodeIn === masterId ||
-					this.graphs.items[item].state.nodeOut === masterId
+					this.graphs.items[key].state.nodeIn === nodeId ||
+					this.graphs.items[key].state.nodeOut === nodeId
 				) {
-					delete this.graphs.items[item];
+					delete this.graphs.items[key];
 					this.dispatch('connectionRemoved', {
-						output_id: this.graphs.items[item].state.nodeOut,
-						input_id: this.graphs.items[item].state.nodeIn,
-						output_class: this.graphs.items[item].state.output,
-						input_class: this.graphs.items[item].state.input,
+						output_id: this.graphs.items[key].state.nodeOut,
+						input_id: this.graphs.items[key].state.nodeIn,
+						output_class: this.graphs.items[key].state.output,
+						input_class: this.graphs.items[key].state.input,
 					});
 				}
 			});

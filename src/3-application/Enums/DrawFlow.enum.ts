@@ -17,4 +17,6 @@ export enum statusLife {
 export enum connection {
   Input = 'input',
   Output = 'output',
+  Inputs = 'inputs',
+  Outputs = 'outputs',
 }
