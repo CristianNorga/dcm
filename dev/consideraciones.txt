@@ -30,3 +30,5 @@ identificacion, se pasa ya la identificacion del elemento en el elemento.
 *connection_ele hace referencia al elemento HTML, la cual no es necesaria ya que podemos acceder a la data previamente guardada en el store
 
 *curvature, reroute_curvature_start_end y reroute_curvature tienen el mismo valor y nunca se cambia, por ende solo se deja curvature.
+
+*propiedad nodeId en el store no es necesaria ya que se genera de manera ramdom en el store

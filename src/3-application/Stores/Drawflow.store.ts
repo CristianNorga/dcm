@@ -1,10 +1,7 @@
 import { defineStore } from 'pinia';
 import type { Events } from '../Types/DrawFlow/Events';
 import type {
-	ElementStates,
-	Board,
-	Graph,
-	Node
+	ElementStates,Board,Graph,Node
 } from '../Types/DrawFlow/Element';
 import { connection, element, statusLife } from '@enums/DrawFlow.enum';
 import Generator from '../Common/Helpers/generator'
@@ -12,7 +9,7 @@ import Generator from '../Common/Helpers/generator'
 export const useDrawFlowStore = defineStore('utilsStore', {
 	state: () => ({
 		//custom
-		parent: new HTMLElement(),
+		parent: {} as HTMLElement,
 		boards: {
 			selected: 'Home',
 			removed: [1, 2, 3, 4, 5, 6, 7, 8, 9],
@@ -31,12 +28,12 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 			selected: 0,
 			removed: [],
 			items: {},
-		} as ElementStates & { items: {[key: number]: Node}},
+		} as ElementStates & { items: {[key: number]: Node}, selected: number },
 		graphs: {
-			selected: 0,
+			selected: '',
 			removed: [],
 			items: {},
-		} as ElementStates & { items: {[key: number]: Graph} },
+		} as ElementStates & { items: {[key: string]: Graph}, selected: string },
 		connections: {
 			startIn: connection.Inputs,
 			inputs: '',
@@ -44,7 +41,7 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 		} as { inputs: string; outputs: string, startIn: connection.Inputs | connection.Outputs },
 		selectedElement: {
 			type: '' as element,
-			id: 0 as number,
+			id: '' as string,
 		},
 		//old
 		events: {
@@ -52,7 +49,6 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 		} as Events,
 		// container: container, drawFlowParent
 		precanvas: null,
-		nodeId: 1,
 		drag: false,
 		reroute: false,
 		reroute_fix_curvature: false,
@@ -100,7 +96,7 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 		startBase(
 			context: MouseEvent & TouchEvent,
 			clickedElement: element,
-			id: number = 0
+			id: string = ''
 		): boolean {
 			this.dispatch('click', clickedElement);
 
@@ -127,30 +123,30 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 		startConnection(
 			context: MouseEvent & TouchEvent,
 			clickedElement: element,
-			id: number,
+			nodeId: string,
 			outPut: string
 		) {
-			if (!this.startBase(context, clickedElement, id)) return false;
+			if (!this.startBase(context, clickedElement, nodeId)) return false;
 			this.connection = true;
 			if (this.nodes.selected > 0) {
 				this.nodes.selected = 0;
 				this.dispatch('nodeUnselected', true);
 			}
-			if (this.graphs.selected > 0) {
-				this.graphs.selected = 0;
+			if (this.graphs.selected != '') {
+				this.graphs.selected = '';
 				this.removeReouteConnectionSelected();
 			}
-			this.drawConnection(id, outPut);
+			this.drawConnection(parseInt(nodeId), outPut);
 		},
 		deleteElement(
 			context: MouseEvent & TouchEvent,
 			clickedElement: element,
-			id: number = 0
+			id: string = ''
 		) {
 			if (!this.startBase(context, clickedElement, id)) return false;
 
 			if (clickedElement === element.Node) {
-				this.removeNodeId(id);
+				this.removeNodeId(parseInt(id));
 			} else if (clickedElement === element.Graph) {
 				this.removeConnection();
 			}
@@ -159,9 +155,9 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 				this.nodes.selected = 0;
 				this.dispatch('nodeUnselected', true);
 			}
-			if (this.graphs.selected > 0) {
+			if (this.graphs.selected != '') {
 				this.removeReouteConnectionSelected();
-				this.graphs.selected = 0;
+				this.graphs.selected = '';
 			}
 		},
 		// old
@@ -226,8 +222,12 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 					this.parent.getBoundingClientRect().y *
 						(this.parent.clientHeight / (this.parent.clientHeight * this.configurableOptions.zoom));
 				
-				this.graphs.items[this.graphs.selected].point[this.selectedElement.id].pos_x = pos_x;
-				this.graphs.items[this.graphs.selected].point[this.selectedElement.id].pos_y = pos_y;
+				this.graphs.items[this.graphs.selected].point[
+					parseInt(this.selectedElement.id)
+				].pos_x = pos_x;
+				this.graphs.items[this.graphs.selected].point[
+					parseInt(this.selectedElement.id)
+				].pos_y = pos_y;
 
 				this.updateConnectionNodes(this.nodes.selected);
 			}
@@ -241,22 +241,22 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 		click(
 			context: MouseEvent & TouchEvent,
 			clickedElement: element,
-			id: number = 0
+			id: string
 		) {
 			if (!this.startBase(context, clickedElement, id)) return false;
 
 			switch (clickedElement) {
 				case element.Node:
-					if (this.nodes.selected != this.selectedElement.id) {
+					if (this.nodes.selected != parseInt(this.selectedElement.id)) {
 						this.dispatch('nodeUnselected', true);
 					} else {
 						this.dispatch('nodeSelected', this.nodes.selected);
 					}
 					this.nodes.selected = 0;
-					this.graphs.selected = 0;
+					this.graphs.selected = '';
 					this.removeReouteConnectionSelected();
 
-					this.nodes.selected = this.selectedElement.id;
+					this.nodes.selected = parseInt(this.selectedElement.id);
 					if (!this.draggable_inputs) {
 						if (
 							(context.target as HTMLAreaElement).tagName !== 'INPUT' &&
@@ -276,9 +276,9 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 						this.nodes.selected = 0;
 						this.dispatch('nodeUnselected', true);
 					}
-					if (this.graphs.selected > 0) {
+					if (this.graphs.selected != '') {
 						this.removeReouteConnectionSelected();
-						this.graphs.selected = 0;
+						this.graphs.selected = '';
 					}
 					this.editor_selected = true;
 					break;
@@ -287,9 +287,9 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 						this.nodes.selected = 0;
 						this.dispatch('nodeUnselected', true);
 					}
-					if (this.graphs.selected > 0) {
+					if (this.graphs.selected != '') {
 						this.removeReouteConnectionSelected();
-						this.graphs.selected = 0;
+						this.graphs.selected = '';
 					}
 					this.graphs.selected = this.selectedElement.id;
 
@@ -347,9 +347,9 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 		},
 		// Draw
 		drawConnection(nodeId: number, idOutPut: string) {
-			let id = Generator.idBaseRamdom();
-			this.graphs.items[id] = {
-				id: id,
+			let key = `${nodeId}.${idOutPut}`;
+			this.graphs.items[key] = {
+				id: key,
 				name: 'Connection',
 				state: {
 					status: statusLife.Active,
@@ -362,12 +362,45 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 				data: {},
 			} as Graph;
 			this.nodes.selected = nodeId;
-			this.graphs.selected = id;
-			this.selectedElement.id = id; //sobra?
+			this.graphs.selected = key;
+			this.selectedElement.id = key; //sobra?
 			this.selectedElement.type = element.Graph;
 			this.dispatch('connectionStart', {
 				output_id: nodeId,
 				output_class: idOutPut,
+			});
+		},
+		addConnection(id_output: number, id_input: number, output_class: string, input_class: string) {
+			let nodeInput = this.nodes.items[id_input];
+			let nodeOutput = this.nodes.items[id_output];
+
+			let keyGraph = `${nodeInput.masterId}.${input_class}-${nodeOutput.masterId}.${output_class}`;
+			
+			// Check connection exist
+			if (this.graphs.items[keyGraph] === undefined) {
+				//Draw connection
+				this.graphs.items[keyGraph] = {
+					id: keyGraph,
+					name: 'Connection',
+					state: {
+						status: statusLife.Active,
+						pathToDraw: '',
+						nodeIn: id_input,
+						nodeOut: id_output,
+						input: input_class,
+						output: output_class,
+					},
+					data: {},
+				} as Graph;
+				this.updateConnectionNodes(nodeOutput.id);
+				this.updateConnectionNodes(nodeInput.id);
+			}
+
+			this.dispatch('connectionCreated', {
+				output_id: id_output,
+				input_id: id_input,
+				output_class: output_class,
+				input_class: input_class,
 			});
 		},
 		updateConnection(eX: number, eY: number) {
@@ -379,25 +412,25 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 			let parentHeightZoom = this.parent.clientHeight / (this.parent.clientHeight * this.configurableOptions.zoom);
 			parentHeightZoom = parentHeightZoom || 0;
 
-			var line_x =
+			let line_x =
 				nodeConnection.offsetWidth / 2 +
 				nodeConnection.pos_x -
 				this.parent.getBoundingClientRect().x * parentWitdhZoom;
 
-			var line_y = nodeConnection.offsetHeight / 2 + (nodeConnection.pos_y) - this.parent.getBoundingClientRect().y * parentHeightZoom;
+			let line_y = nodeConnection.offsetHeight / 2 + (nodeConnection.pos_y) - this.parent.getBoundingClientRect().y * parentHeightZoom;
 			
-			var x =
+			let x =
 				eX *
 					(this.parent.clientWidth / (this.parent.clientWidth * this.configurableOptions.zoom)) -
 				this.parent.getBoundingClientRect().x *
 					(this.parent.clientWidth / (this.parent.clientWidth * this.configurableOptions.zoom));
-			var y =
+			let y =
 				eY *
 					(this.parent.clientHeight / (this.parent.clientHeight * this.configurableOptions.zoom)) -
 				this.parent.getBoundingClientRect().y *
 					(this.parent.clientHeight / (this.parent.clientHeight * this.configurableOptions.zoom));
 
-			var lineCurve = this.createCurvature(
+			let lineCurve = this.createCurvature(
 				line_x,
 				line_y,
 				x,
@@ -419,9 +452,8 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 
 			const elemsOut = Object.keys(this.graphs.items)
 				.filter((key) => 
-					this.graphs.items[Number.parseInt(key)].state.nodeOut === id
+					this.graphs.items[key].state.nodeOut === id
 				)
-				.map((key) => Number.parseInt(key));
 
 			let line_x,line_y,eX,eY = 0;
 			elemsOut.forEach((key) => {
@@ -525,7 +557,6 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 		dispatch(event: string, details: any) {
 			// Check if this event not exists
 			if (this.events[event] === undefined) {
-				// console.error(`This event: ${event} does not exist`);
 				return false;
 			}
 			this.events[event].listeners.forEach((listener) => {
@@ -533,6 +564,29 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 			});
 		},
 		// Nodes
+		addNode(
+			node: Node
+		) {
+
+			// Check if node exist
+			let exist = Object.values(this.nodes.items).find((val) => val.masterId === node.masterId) !== undefined;
+
+			if (exist) {
+				console.warn('Node already exist');
+				return false;
+			}
+
+			node.id = Generator.idBaseRamdom();
+
+			this.nodes.items[node.id] = node;
+
+			//search nodes linked
+			//first input
+			//second output
+			//draw connections
+
+			this.dispatch('nodeCreated', node);
+		},
 		removeNodeId(id: number) {
 			this.removeConnectionNodeId(id ?? 0);
 
@@ -549,7 +603,29 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 		removeReouteConnectionSelected() {
 			this.dispatch('connectionUnselected', true);
 		},
-		removeConnection() {},
+		removeConnection() {
+			if (this.graphs.selected !== '') {
+				const graph = this.graphs.items[this.graphs.selected];
+
+				delete this.graphs.items[this.graphs.selected]
+				
+				this.dispatch('connectionRemoved', {
+					output_id: graph.state.nodeOut,
+					input_id: graph.state.nodeIn,
+					output_class: graph.state.output,
+					input_class: graph.state.input,
+				});
+
+				this.graphs.selected = '';
+			}
+		},
+		removeSingleConnection(id: string) {
+			delete this.graphs.items[id];
+			
+			this.dispatch('connectionRemoved', {
+				graphId: id,
+			});
+		},
 		removeConnectionNodeId(nodeId: number) {
 			//delete graph in the current board
 			//🚩BACK(actualizar reactivamente)

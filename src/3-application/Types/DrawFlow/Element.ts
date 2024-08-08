@@ -1,14 +1,13 @@
 import type { statusLife, connection } from '../../Enums/DrawFlow.enum';
 //general
 export type ElementStates = {
-	selected: number;
 	removed: Array<number>;
 	refKeys?: Array<RefKey>;
 };
 
 //graphs
 export type Graph = {
-	id: number;
+	id: string;
 	name: string;
 	state: GraphStates;
 	point: Array<PositionStates>;
@@ -67,6 +66,7 @@ export type BoardData = {
 
 //input
 export type PositionStates = {
+	linked: string
 	offsetWidth: number;
 	offsetHeight: number;
 	pos_y: number;
