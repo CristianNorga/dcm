@@ -10,6 +10,7 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@nuxt/icon": "^1.4.5",
     "drawflow": "^0.0.59",
     "nuxt": "^3.12.4",
     "pinia": "^2.1.7",
@@ -17,9 +18,11 @@
     "vue-router": "^4.3.3"
   },
   "devDependencies": {
+    "@iconify-json/devicon-plain": "^1.1.47",
     "@nuxt/ui": "^2.17.0",
     "@pinia/nuxt": "^0.5.1",
     "@vueuse/nuxt": "^10.11.0",
-    "nuxt-mongoose": "^1.0.6"
+    "nuxt-mongoose": "^1.0.6",
+    "sass-embedded": "^1.77.8"
   }
 }

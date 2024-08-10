@@ -21,12 +21,8 @@ export default defineNuxtConfig({
 		'@entities': path.resolve(__dirname, './src/3-application/Entities'),
 		'@components': path.resolve(__dirname, './src/1-presentation/Components'),
 	},
-	modules: [
-		// 'nuxt-mongoose',
-		'@vueuse/nuxt',
-		'@nuxt/ui',
-		'@pinia/nuxt',
-	],
+	modules: [// 'nuxt-mongoose',
+    '@vueuse/nuxt', '@nuxt/ui', '@pinia/nuxt', "@nuxt/icon"],
 	// mongoose: {
 	// 	uri: 'process.env.MONGODB_URI',
 	// 	options: {},

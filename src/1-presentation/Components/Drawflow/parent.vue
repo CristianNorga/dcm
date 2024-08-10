@@ -5,25 +5,37 @@ const storeDrawFlow = useDrawFlowStore();
 const drawFlowParent = ref({});
 const drag = ref(false);
 
-const click = () => {
-  console.log('startDrag');
+const click = (event) => {
   drag.value = true;
   storeDrawFlow.click(event, element.Board);
 };
 
-const dragEnd = () => {
-  console.log('dragEnd');
+const position = (event) => {
+  if (drag.value) {
+    storeDrawFlow.position(event);
+  }
+};
+
+const dragEnd = (event) => {
   drag.value = false;
+  storeDrawFlow.dragEnd(event);
 };
 
 onMounted(() => {
   storeDrawFlow.setDrawFlowParent(drawFlowParent.value);
+  storeDrawFlow.loadDataExample();
 });
 
 // styles computed
-const stylesCP = computed(() => {
+// const stylesParentCP = computed(() => {
+//   return {
+//     cursor: drag.value ? 'grabbing' : 'grab',
+//   };
+// });
+
+const stylesDrawCP = computed(() => {
   return {
-    cursor: drag.value ? 'grabbing' : 'grab',
+    transform: `scale(${storeDrawFlow.boards.scale}) translate(${storeDrawFlow.boards.x}px, ${storeDrawFlow.boards.y}px)`,
   };
 });
 // render: render, no necesary
@@ -33,7 +45,7 @@ const stylesCP = computed(() => {
 
 <template>
   <!-- 
-  @mousemove="position(this)"
+  
   @touchend="dragEnd(this)"
   @touchmove="position(this)"
   @touchstart="click(this)"
@@ -52,18 +64,18 @@ const stylesCP = computed(() => {
     ref="drawFlowParent" 
     class="drawflow-parent"
     tabindex="0"
+    @mousemove="((event) => position(event))"
     @mousedown="((event) => click(event))"
-    @mouseup="dragEnd()"
-    :style="stylesCP"
+    @mouseup="((event) => dragEnd(event))"
   >
-    <div class="drawflow">
-      <DrawflowNode v-for="(node, key) in storeDrawFlow.nodes.items" :key="key" />
-      <DrawflowGraph v-for="(graph, key) in storeDrawFlow.graphs.items" :key="key" />
+    <div class="drawflow" :style="stylesDrawCP">
+      <DrawflowNode v-for="(node, key) in storeDrawFlow.nodes.items" :key="key" :index="key" />
+      <DrawflowGraph v-for="(graph, key) in storeDrawFlow.graphs.items" :key="key" :index="key" />
     </div>
   </summary>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .drawflow-parent {
   background: rgba(255, 255, 255, 1);
   background-size: 20px 20px;
@@ -73,5 +85,9 @@ const stylesCP = computed(() => {
   height: calc(100vh - 64px);
   position: relative;
   overflow: hidden;
+  cursor: grab;
+  &:active {
+    cursor: grabbing;
+  }
 }
 </style>

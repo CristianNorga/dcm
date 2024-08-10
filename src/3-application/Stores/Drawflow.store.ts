@@ -11,6 +11,9 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 		//custom
 		parent: {} as HTMLElement,
 		boards: {
+			x: 0,
+			y: 0,
+			scale: 1,
 			selected: 'Home',
 			removed: [1, 2, 3, 4, 5, 6, 7, 8, 9],
 			items: [
@@ -23,11 +26,12 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 					},
 				},
 			],
-		} as Board,
+		} as Board & { x: number, y: number, scale: number },
 		nodes: {
 			selected: 0,
 			removed: [],
-			items: {},
+			items: {
+			},
 		} as ElementStates & { items: {[key: number]: Node}, selected: number },
 		graphs: {
 			selected: '',
@@ -90,6 +94,30 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 	}),
 	actions: {
 		//custom
+		loadDataExample() {
+			let nodeMain = {} as Node;
+			nodeMain = {
+				id: 1,
+				type: 'service',
+				data: {
+					name: 'Servicio1',
+					namespace: 'namespace1',
+					technology: "csharp",
+				},
+				masterId: 'main',
+				state: {
+					x: 100,
+					y: 100,
+					status: statusLife.Active,
+					width: 100,
+					height: 100,
+				},
+				inputs: {},
+				outputs: {},
+			};
+
+			this.nodes.items[1] = nodeMain;
+		},
 		setDrawFlowParent(parent: HTMLElement) {
 			this.parent = parent;
 		},
@@ -113,10 +141,6 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 				type: clickedElement,
 				id: id,
 			};
-
-			if (context?.button === 0) {
-				this.contextmenuDel();
-			}
 
 			return true;
 		},
@@ -161,8 +185,135 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 			}
 		},
 		// old
-		dragEnd(context: any) {
-			return console.log('dragEnd', context);
+		dragEnd(context: MouseEvent & TouchEvent) {
+			let e_pos_x, e_pos_y;
+			if (context.type === 'touchend') {
+				e_pos_x = this.mouse_x;
+				e_pos_y = this.mouse_y;
+				// let ele_last = document.elementFromPoint(e_pos_x, e_pos_y);
+			} else {
+				e_pos_x = context.clientX;
+				e_pos_y = context.clientY;
+				// let ele_last = context.target;
+			}
+
+			// if (this.drag) {
+			// 	if (this.pos_x_start != e_pos_x || this.pos_y_start != e_pos_y) {
+			// 		this.dispatch('nodeMoved', this.ele_selected.id.slice(5));
+			// 	}
+			// }
+
+			// if (this.drag_point) {
+			// 	this.ele_selected.classList.remove('selected');
+			// 	if (this.pos_x_start != e_pos_x || this.pos_y_start != e_pos_y) {
+			// 		this.dispatch(
+			// 			'rerouteMoved',
+			// 			this.ele_selected.parentElement.classList[2].slice(14)
+			// 		);
+			// 	}
+			// }
+
+			if (this.editor_selected) {
+				this.canvas_x = this.canvas_x + -(this.pos_x - e_pos_x);
+				this.canvas_y = this.canvas_y + -(this.pos_y - e_pos_y);
+				this.editor_selected = false;
+			}
+			// if (this.connection === true) {
+			// 	if (
+			// 		ele_last.classList[0] === 'input' ||
+			// 		(this.force_first_input &&
+			// 			(ele_last.closest('.drawflow_content_node') != null ||
+			// 				ele_last.classList[0] === 'drawflow-node'))
+			// 	) {
+			// 		if (
+			// 			this.force_first_input &&
+			// 			(ele_last.closest('.drawflow_content_node') != null ||
+			// 				ele_last.classList[0] === 'drawflow-node')
+			// 		) {
+			// 			if (ele_last.closest('.drawflow_content_node') != null) {
+			// 				var input_id = ele_last.closest('.drawflow_content_node').parentElement
+			// 					.id;
+			// 			} else {
+			// 				var input_id = ele_last.id;
+			// 			}
+			// 			if (
+			// 				Object.keys(this.getNodeFromId(input_id.slice(5)).inputs).length === 0
+			// 			) {
+			// 				var input_class = false;
+			// 			} else {
+			// 				var input_class = 'input_1';
+			// 			}
+			// 		} else {
+			// 			// Fix connection;
+			// 			var input_id = ele_last.parentElement.parentElement.id;
+			// 			var input_class = ele_last.classList[1];
+			// 		}
+			// 		var output_id = this.ele_selected.parentElement.parentElement.id;
+			// 		var output_class = this.ele_selected.classList[1];
+
+			// 		if (output_id !== input_id && input_class !== false) {
+			// 			if (
+			// 				this.container.querySelectorAll(
+			// 					'.connection.node_in_' +
+			// 						input_id +
+			// 						'.node_out_' +
+			// 						output_id +
+			// 						'.' +
+			// 						output_class +
+			// 						'.' +
+			// 						input_class
+			// 				).length === 0
+			// 			) {
+			// 				// Conection no exist save connection
+
+			// 				this.connection_ele.classList.add('node_in_' + input_id);
+			// 				this.connection_ele.classList.add('node_out_' + output_id);
+			// 				this.connection_ele.classList.add(output_class);
+			// 				this.connection_ele.classList.add(input_class);
+			// 				var id_input = input_id.slice(5);
+			// 				var id_output = output_id.slice(5);
+
+			// 				this.drawflow.drawflow[this.module].data[id_output].outputs[
+			// 					output_class
+			// 				].connections.push({ node: id_input, output: input_class });
+			// 				this.drawflow.drawflow[this.module].data[id_input].inputs[
+			// 					input_class
+			// 				].connections.push({ node: id_output, input: output_class });
+			// 				this.updateConnectionNodes('node-' + id_output);
+			// 				this.updateConnectionNodes('node-' + id_input);
+			// 				this.dispatch('connectionCreated', {
+			// 					output_id: id_output,
+			// 					input_id: id_input,
+			// 					output_class: output_class,
+			// 					input_class: input_class,
+			// 				});
+			// 			} else {
+			// 				this.dispatch('connectionCancel', true);
+			// 				this.connection_ele.remove();
+			// 			}
+
+			// 			this.connection_ele = null;
+			// 		} else {
+			// 			// Connection exists Remove Connection;
+			// 			this.dispatch('connectionCancel', true);
+			// 			this.connection_ele.remove();
+			// 			this.connection_ele = null;
+			// 		}
+			// 	} else {
+			// 		// Remove Connection;
+			// 		this.dispatch('connectionCancel', true);
+			// 		this.connection_ele.remove();
+			// 		this.connection_ele = null;
+			// 	}
+			// }
+
+			this.drag = false;
+			this.drag_point = false;
+			this.connection = false;
+			// this.ele_selected = null;
+			this.editor_selected = false;
+
+			// this.dispatch('mouseUp', e);
 		},
 		position(context: MouseEvent & TouchEvent) {
 			let e_pos_x, e_pos_y, x, y;
@@ -179,11 +330,10 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 				this.updateConnection(e_pos_x, e_pos_y);
 			}
 			if (this.editor_selected) {
-				x = this.canvas_x + -(this.pos_x - e_pos_x);
-				y = this.canvas_y + -(this.pos_y - e_pos_y);
 				this.dispatch('translate', { x: x, y: y });
-				this.parent.style.transform =
-					'translate(' + x + 'px, ' + y + 'px) scale(' + this.configurableOptions.zoom + ')';
+				this.boards.x = this.canvas_x + -(this.pos_x - e_pos_x);
+				this.boards.y = this.canvas_y + -(this.pos_y - e_pos_y);
+				this.boards.scale = this.configurableOptions.zoom;
 			}
 			if (this.drag) {
 				context.preventDefault();
@@ -332,9 +482,6 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 		},
 		contextmenu(context: any) {
 			console.log('contextmenu', context);
-		},
-		contextmenuDel() {
-			console.log('contextmenuDel');
 		},
 		key(context: any) {
 			console.log('key', context);

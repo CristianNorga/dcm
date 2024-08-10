@@ -31,7 +31,6 @@ export type RefKey = {
 //nodes
 export type NodeStates = {
 	status: statusLife;
-	class: string;
 	x: number;
 	y: number;
 	width: number;
@@ -41,7 +40,7 @@ export type NodeStates = {
 export type Node = {
 	masterId: string;
 	id: number;
-	name: string;
+	type: string;
 	state: NodeStates;
 	inputs: { [key: string]: PositionStates };
 	outputs: { [key: string]: PositionStates };

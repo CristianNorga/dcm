@@ -32,3 +32,5 @@ identificacion, se pasa ya la identificacion del elemento en el elemento.
 *curvature, reroute_curvature_start_end y reroute_curvature tienen el mismo valor y nunca se cambia, por ende solo se deja curvature.
 
 *propiedad nodeId en el store no es necesaria ya que se genera de manera ramdom en el store
+
+*contextmenuDel se elimina ya que cada componente tendra la responsabilidad de switchear los estados de los elementos.
