@@ -130,11 +130,6 @@ export default class Drawflow {
 			}
 		}
 	}
-	contextmenuDel() {
-		if (this.precanvas.getElementsByClassName('drawflow-delete').length) {
-			this.precanvas.getElementsByClassName('drawflow-delete')[0].remove();
-		}
-	}
 
 	// key(e) {
 	// 	this.dispatch('keydown', e);

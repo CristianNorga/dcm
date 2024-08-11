@@ -14,13 +14,11 @@ const props = defineProps(
 const index = parseInt(props.index);
 const data = ref({})
 
-if (storeDrawFlow.nodes.items[index].type === 'service') {
-	data.value = storeDrawFlow.nodes.items[props.index].data;
-}
-
+data.value = storeDrawFlow.nodes.items[props.index].data;
 
 const select = (event) => {
-	storeDrawFlow.click(event, element.Node, props.key);
+	event.stopPropagation();
+	storeDrawFlow.click(event, element.Node, props.index);
 };
 
 const nodeClasses = computed(() => {
@@ -31,19 +29,21 @@ const nodeClasses = computed(() => {
 
 const nodeStyless = computed(() => {
   return {
-    top: '304px',
-    left: '607px',
+    top: `${storeDrawFlow.nodes.items[index].state.y}px`,
+    left: `${storeDrawFlow.nodes.items[index].state.x}px`,
   };
 });
 </script>
 
 <template>
   <UCard 
-	@click="select"
+	@mousedown="(event)=>select(event)"
 	id="node-5"
 	:class="nodeClasses"
 	class="drawflow-node template"
-	:style="nodeStyless">
+	:style="nodeStyless"
+	:ui="{header: {base: 'cursor-move'}, body: {padding: ''}}"
+	>
     <template #header>
       <!-- grid 2 columns tailwind -->
 			<div class="grid grid-cols-2">
@@ -57,10 +57,16 @@ const nodeStyless = computed(() => {
 			</div>
     </template>
 
+		<template #body>
+			<p>datos secundarios</p>
+			<!-- inputs -->
+			<component :is="'node'+storeDrawFlow.nodes.items[index].type" />
+		</template>
+
   </UCard>
 </template>
 
-<style scoped lang="css">
+<style scoped lang="scss">
 .drawflow-node {
 	position: absolute;
 	width: 200px;

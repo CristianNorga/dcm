@@ -3,21 +3,16 @@ import { element } from '@enums/DrawFlow.enum';
 const storeDrawFlow = useDrawFlowStore();
 
 const drawFlowParent = ref({});
-const drag = ref(false);
 
 const click = (event) => {
-  drag.value = true;
   storeDrawFlow.click(event, element.Board);
 };
 
 const position = (event) => {
-  if (drag.value) {
-    storeDrawFlow.position(event);
-  }
+  storeDrawFlow.position(event);
 };
 
 const dragEnd = (event) => {
-  drag.value = false;
   storeDrawFlow.dragEnd(event);
 };
 
@@ -25,13 +20,6 @@ onMounted(() => {
   storeDrawFlow.setDrawFlowParent(drawFlowParent.value);
   storeDrawFlow.loadDataExample();
 });
-
-// styles computed
-// const stylesParentCP = computed(() => {
-//   return {
-//     cursor: drag.value ? 'grabbing' : 'grab',
-//   };
-// });
 
 const stylesDrawCP = computed(() => {
   return {

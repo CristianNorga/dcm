@@ -73,11 +73,9 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 		first_click: {} as EventTarget,
 		force_first_input: false,
 		draggable_inputs: true,
-		useuuid: false,
 		// parent: parent, drawFlowParent
 		noderegister: {},
 		// render: render, no necesary
-		drawflow: { drawflow: { Home: { data: {} } } },
 		configurableOptions: {
 			module: 'Home',
 			editor_mode: 'edit',
@@ -98,13 +96,22 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 			let nodeMain = {} as Node;
 			nodeMain = {
 				id: 1,
-				type: 'service',
+				type: 'Back',
 				data: {
 					name: 'Servicio1',
 					namespace: 'namespace1',
 					technology: "csharp",
+					inputs: {
+						rest: {
+							controllerName:{
+								action: {
+									description: 'action',
+								}
+							}
+						}
+					},
 				},
-				masterId: 'main',
+				masterId: 'namespace1.Servicio1',
 				state: {
 					x: 100,
 					y: 100,
@@ -117,6 +124,20 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 			};
 
 			this.nodes.items[1] = nodeMain;
+			this.nodes.items[2] = {
+				...nodeMain,
+				id: 2,
+				state: {
+					...nodeMain.state,
+					x: 200,
+					y: 100,
+				},
+				data: {
+					...nodeMain.data,
+					name: 'Servicio2',
+					namespace: 'namespace2',
+				},
+			};
 		},
 		setDrawFlowParent(parent: HTMLElement) {
 			this.parent = parent;
@@ -310,6 +331,7 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 			this.drag = false;
 			this.drag_point = false;
 			this.connection = false;
+			this.nodes.selected = 0;
 			// this.ele_selected = null;
 			this.editor_selected = false;
 
@@ -393,20 +415,19 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 			clickedElement: element,
 			id: string
 		) {
-			if (!this.startBase(context, clickedElement, id)) return false;
+			if (!this.startBase(context, clickedElement)) return false;
 
 			switch (clickedElement) {
 				case element.Node:
-					if (this.nodes.selected != parseInt(this.selectedElement.id)) {
+					if (this.nodes.selected != parseInt(id)) {
 						this.dispatch('nodeUnselected', true);
 					} else {
 						this.dispatch('nodeSelected', this.nodes.selected);
 					}
-					this.nodes.selected = 0;
 					this.graphs.selected = '';
 					this.removeReouteConnectionSelected();
 
-					this.nodes.selected = parseInt(this.selectedElement.id);
+					this.nodes.selected = parseInt(id);
 					if (!this.draggable_inputs) {
 						if (
 							(context.target as HTMLAreaElement).tagName !== 'INPUT' &&
