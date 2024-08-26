@@ -1,4 +1,5 @@
 <script setup>
+import DrawflowNodeBack from './Node/back.vue';
 import { element } from '@enums/DrawFlow.enum';
 const storeDrawFlow = useDrawFlowStore();
 
@@ -11,10 +12,17 @@ const props = defineProps(
 	}
 );
 
+let componentType;
 const index = parseInt(props.index);
-const data = ref({})
-
+const data = ref({});
 data.value = storeDrawFlow.nodes.items[props.index].data;
+
+switch (storeDrawFlow.nodes.items[index].type) {
+	case 'Back':
+	default:
+		componentType = DrawflowNodeBack;
+		break;
+}
 
 const select = (event) => {
 	event.stopPropagation();
@@ -42,7 +50,7 @@ const nodeStyless = computed(() => {
 	:class="nodeClasses"
 	class="drawflow-node template"
 	:style="nodeStyless"
-	:ui="{header: {base: 'cursor-move'}, body: {padding: ''}}"
+	:ui="{header: {base: 'cursor-move'}, body: {padding: '', base: 'body'}, rounded: 'rounded-none'}"
 	>
     <template #header>
       <!-- grid 2 columns tailwind -->
@@ -57,11 +65,7 @@ const nodeStyless = computed(() => {
 			</div>
     </template>
 
-		<template #body>
-			<p>datos secundarios</p>
-			<!-- inputs -->
-			<component :is="'node'+storeDrawFlow.nodes.items[index].type" />
-		</template>
+		<component :is="componentType" :index="index" />
 
   </UCard>
 </template>

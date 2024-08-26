@@ -1,9 +1,11 @@
 import { defineStore } from 'pinia';
 import type { Events } from '../Types/DrawFlow/Events';
 import type {
-	ElementStates,Board,Graph,Node
+	ElementStates,Board,Graph,
+	ConnectionPoint,ConnectionBread
 } from '../Types/DrawFlow/Element';
 import { connection, element, statusLife } from '@enums/DrawFlow.enum';
+import { Node } from '@entities/Node';
 import Generator from '../Common/Helpers/generator'
 
 export const useDrawFlowStore = defineStore('utilsStore', {
@@ -93,51 +95,94 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 	actions: {
 		//custom
 		loadDataExample() {
-			let nodeMain = {} as Node;
-			nodeMain = {
-				id: 1,
-				type: 'Back',
-				data: {
+			let nodeMain = new Node(
+				'namespace1.Servicio1',
+				1,
+				'Back',
+				{
 					name: 'Servicio1',
 					namespace: 'namespace1',
-					technology: "csharp",
+					technology: 'csharp',
 					inputs: {
-						rest: {
-							controllerName:{
+						//mejor tener un array, que liste todos los inputs, solo cuando se inicializa el nodo, se mapea en los objetos de positionState de inputs y outputs respectivamente.
+						http: {
+							controllerName: {
 								action: {
 									description: 'action',
-								}
-							}
-						}
+								},
+							},
+						},
 					},
 				},
-				masterId: 'namespace1.Servicio1',
-				state: {
-					x: 100,
-					y: 100,
-					status: statusLife.Active,
-					width: 100,
-					height: 100,
-				},
-				inputs: {},
-				outputs: {},
-			};
+				{
+					http: {
+						type: connection.Crumb,
+						open: true,
+						show: true,
+					},
+					'http.controllerName': {
+						type: connection.Crumb,
+						open: true,
+						show: true,
+					},
+					'http.controllerName.action': {
+						type: connection.Point,
+						state: {
+							linked: '',
+							offsetWidth: 0,
+							offsetHeight: 0,
+							pos_y: 0,
+							pos_x: 0,
+						},
+						show: true,
+					},
+				}
+			);
 
 			this.nodes.items[1] = nodeMain;
-			this.nodes.items[2] = {
-				...nodeMain,
-				id: 2,
-				state: {
-					...nodeMain.state,
-					x: 200,
-					y: 100,
-				},
-				data: {
-					...nodeMain.data,
+			this.nodes.items[2] = new Node(
+				'namespace1.Servicio2',
+				2,
+				'Back',
+				{
 					name: 'Servicio2',
 					namespace: 'namespace2',
+					technology: 'csharp',
+					inputs: {
+						//mejor tener un array, que liste todos los inputs, solo cuando se inicializa el nodo, se mapea en los objetos de positionState de inputs y outputs respectivamente.
+						http: {
+							controllerName: {
+								action: {
+									description: 'action',
+								},
+							},
+						},
+					},
 				},
-			};
+				{
+					http: {
+						type: connection.Crumb,
+						open: true,
+						show: true,
+					},
+					'http.controllerName': {
+						type: connection.Crumb,
+						open: true,
+						show: true,
+					},
+					'http.controllerName.action': {
+						type: connection.Point,
+						state: {
+							linked: '',
+							offsetWidth: 0,
+							offsetHeight: 0,
+							pos_y: 0,
+							pos_x: 0,
+						},
+						show: true,
+					},
+				}
+			);
 		},
 		setDrawFlowParent(parent: HTMLElement) {
 			this.parent = parent;
@@ -182,6 +227,35 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 				this.removeReouteConnectionSelected();
 			}
 			this.drawConnection(parseInt(nodeId), outPut);
+		},
+		switchCrumbConnection(nodeId: number, input: string){
+			if (this.nodes.items[nodeId].inputs[input].type !== connection.Crumb) return;
+				
+			this.nodes.items[nodeId].inputs[input].open = !
+				this.nodes.items[nodeId].inputs[input].open;
+
+			let Coincidences = input.match(/\./g)?.length || 0;
+
+			if (this.nodes.items[nodeId].inputs[input].open) {
+				Object.entries(this.nodes.items[nodeId].inputs).forEach(
+					([key, value]) => {
+						if (key.includes(input) &&
+							(key.match(/\./g)?.length || 0) === Coincidences + 1){
+							value.show = true;
+						}
+					}
+				);
+			} else {
+				Object.entries(this.nodes.items[nodeId].inputs).forEach(([key, value]) => {
+					if (
+						key.includes(input) &&
+						(key.match(/\./g)?.length || 0) > Coincidences
+					) {
+						value.show = false;
+						value.open = false;
+					}
+				});
+			}
 		},
 		deleteElement(
 			context: MouseEvent & TouchEvent,
@@ -574,18 +648,18 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 		updateConnection(eX: number, eY: number) {
 			const nodeConnection = this.nodes.items
 				[this.nodes.selected][this.connections.startIn]
-				[this.connections[this.connections.startIn]];
+				[this.connections[this.connections.startIn]] as ConnectionPoint;
 			let parentWitdhZoom = this.parent.clientWidth / (this.parent.clientWidth * this.configurableOptions.zoom);
 			parentWitdhZoom = parentWitdhZoom || 0;
 			let parentHeightZoom = this.parent.clientHeight / (this.parent.clientHeight * this.configurableOptions.zoom);
 			parentHeightZoom = parentHeightZoom || 0;
 
-			let line_x =
-				nodeConnection.offsetWidth / 2 +
-				nodeConnection.pos_x -
-				this.parent.getBoundingClientRect().x * parentWitdhZoom;
+			// let line_x =
+			// 	nodeConnection.state.offsetWidth / 2 +
+			// 	nodeConnection.state.pos_x -
+			// 	this.parent.getBoundingClientRect().x * parentWitdhZoom;
 
-			let line_y = nodeConnection.offsetHeight / 2 + (nodeConnection.pos_y) - this.parent.getBoundingClientRect().y * parentHeightZoom;
+			// let line_y = nodeConnection.state.offsetHeight / 2 + (nodeConnection.state.pos_y) - this.parent.getBoundingClientRect().y * parentHeightZoom;
 			
 			let x =
 				eX *
@@ -598,14 +672,14 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 				this.parent.getBoundingClientRect().y *
 					(this.parent.clientHeight / (this.parent.clientHeight * this.configurableOptions.zoom));
 
-			let lineCurve = this.createCurvature(
-				line_x,
-				line_y,
-				x,
-				y,
-				'openclose'
-			);
-			this.graphs.items[this.graphs.selected].state.pathToDraw = lineCurve;
+			// let lineCurve = this.createCurvature(
+			// 	line_x,
+			// 	line_y,
+			// 	x,
+			// 	y,
+			// 	'openclose'
+			// );
+			// this.graphs.items[this.graphs.selected].state.pathToDraw = lineCurve;
 		},
 		updateConnectionNodes(id: number) {
 			const precanvas = this.parent;
@@ -631,29 +705,29 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 
 					let inputRelation = this.nodes.items[nodeRelationId].inputs[
 						this.graphs.items[key].state.output
-					];
+					] as ConnectionPoint;
 
-					eX = inputRelation.offsetWidth / 2 + inputRelation.pos_x - precanvas.getBoundingClientRect().x * parentWitdhZoom;
+					// eX = inputRelation.state.offsetWidth / 2 + inputRelation.state.pos_x - precanvas.getBoundingClientRect().x * parentWitdhZoom;
 
-					eY = inputRelation.offsetHeight / 2 + inputRelation.pos_y - precanvas.getBoundingClientRect().y * parentHeightZoom;
+					// eY = inputRelation.state.offsetHeight / 2 + inputRelation.state.pos_y - precanvas.getBoundingClientRect().y * parentHeightZoom;
 
 					let outputRelation = this.nodes.items[id].outputs[
 						this.graphs.items[key].state.input
-					];
+					] as ConnectionPoint;
 
-					line_x = outputRelation.offsetWidth / 2 + outputRelation.pos_x - precanvas.getBoundingClientRect().x * parentWitdhZoom;
+					// line_x = outputRelation.state.offsetWidth / 2 + outputRelation.state.pos_x - precanvas.getBoundingClientRect().x * parentWitdhZoom;
 
-					line_y = outputRelation.offsetHeight / 2 + outputRelation.pos_y - precanvas.getBoundingClientRect().y * parentHeightZoom;
+					// line_y = outputRelation.state.offsetHeight / 2 + outputRelation.state.pos_y - precanvas.getBoundingClientRect().y * parentHeightZoom;
 
-					const lineCurve = this.createCurvature(
-						line_x,
-						line_y,
-						eX,
-						eY,
-						'openclose'
-					);
+					// const lineCurve = this.createCurvature(
+					// 	line_x,
+					// 	line_y,
+					// 	eX,
+					// 	eY,
+					// 	'openclose'
+					// );
 
-					this.graphs.items[key].state.pathToDraw = lineCurve;
+					// this.graphs.items[key].state.pathToDraw = lineCurve;
 
 				} else {
 					//points disabled temporaly

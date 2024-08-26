@@ -63,11 +63,23 @@ export type BoardData = {
 	};
 };
 
-//input
+//input - connection
 export type PositionStates = {
 	linked: string
 	offsetWidth: number;
 	offsetHeight: number;
 	pos_y: number;
 	pos_x: number;
+};
+
+export type ConnectionBread = {
+	open?: boolean;
+	type: connection;
+	show: boolean;
+};
+
+export type ConnectionPoint = {
+	type: connection;
+	state?: PositionStates;
+	show: boolean;
 };
