@@ -2,7 +2,6 @@
 import { connection } from '@enums/DrawFlow.enum';
 const storeDrawFlow = useDrawFlowStore();
 
-
 const props = defineProps({
   index: {
     type: String,
@@ -24,43 +23,50 @@ if(QuantityKeys > 6){
   console.error(`The maximum number of keys is 6, and the node #${props.indexNode} in the input #${props.index} has ${QuantityKeys}`);
 }
 
-let buttonClasses;
-buttonClasses += ` z-${50 - (QuantityKeys-1) * 10} `;
+let buttonClasses = ` z-${50 - (QuantityKeys-1) * 10} `;
 
-const click = (event) => {
+const click = (event: any) => {
   event.stopPropagation();
 
-  storeDrawFlow.switchCrumbConnection(props.indexNode, props.index);
+  storeDrawFlow.switchCrumbConnection(props.indexNode, props.index, connection.Outputs);
 };
 
 const iconArrowClasses = computed(() => {
   return {
-    'rotate-90': storeDrawFlow.nodes.items[props.indexNode].inputs[props.index].open,
+    'rotate-90': storeDrawFlow.nodes.items[props.indexNode].outputs[props.index].open,
   };
 });
 
-const positionStyles = computed(() => {
-  return {
-    top: `${0}px`,
-    left: `${0}px`,
-  };
-});
 
 </script>
 
 <template>
 	<button
-    v-if="storeDrawFlow.nodes.items[props.indexNode].inputs[props.index].show"
+    v-if="storeDrawFlow.nodes.items[props.indexNode].outputs[props.index].show"
 		type="button"
 		class="focus:outline-none focus-visible:outline-0 disabled:cursor-not-allowed disabled:opacity-75 flex-shrink-0 font-medium rounded-none text-sm gap-x-1.5 p-3 text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-primary-500 dark:focus-visible:ring-primary-400 inline-flex items-center border-b border-gray-200 dark:border-gray-700 overflow-hidden dark:bg-gray-900 w-full"
     :class="buttonClasses"
-    @click="(event)=>click(event)"
-    :style="positionStyles"
+    @click="(event: any)=>click(event)"
 	>
-		<div class="relative"></div>
-		<span class="truncate">{{name}}</span
-		><span v-if="storeDrawFlow.nodes.items[props.indexNode].inputs[props.index].type === connection.Crumb"
-			class="i-heroicons-chevron-right-20-solid w-5 h-5 ms-auto transform transition-transform duration-200" :class="iconArrowClasses"
+    <span v-if="storeDrawFlow.nodes.items[props.indexNode].outputs[props.index].type === connection.Crumb"
+			class="i-heroicons-chevron-right-20-solid w-5 h-5 transform transition-transform duration-200" :class="iconArrowClasses"
 		></span>
+    <span v-else class="w-5 h-5"></span>
+		
+		<span class="truncate text-left">{{name}}</span>
+
+    <div class="relative ms-auto">
+      <div v-show="storeDrawFlow.nodes.items[props.indexNode].outputs[props.index].type !== connection.Crumb || !storeDrawFlow.nodes.items[props.indexNode].outputs[props.index].open"
+      class="connection-circle--output absolute w-5 h-5 border-2 border-primary-500 dark:border-primary-400 rounded-full focus:bg-primary-500 dark:hover:bg-primary-400">
+      </div>
+    </div>
+    
 	</button>
 </template>
+
+<style>
+.connection-circle--output {
+  top: -10px;
+  left: 0px;
+}
+</style>

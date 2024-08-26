@@ -28,23 +28,26 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 					},
 				},
 			],
-		} as Board & { x: number, y: number, scale: number },
+		} as Board & { x: number; y: number; scale: number },
 		nodes: {
 			selected: 0,
 			removed: [],
-			items: {
-			},
-		} as ElementStates & { items: {[key: number]: Node}, selected: number },
+			items: {},
+		} as ElementStates & { items: { [key: number]: Node }; selected: number },
 		graphs: {
 			selected: '',
 			removed: [],
 			items: {},
-		} as ElementStates & { items: {[key: string]: Graph}, selected: string },
+		} as ElementStates & { items: { [key: string]: Graph }; selected: string },
 		connections: {
 			startIn: connection.Inputs,
 			inputs: '',
 			outputs: '',
-		} as { inputs: string; outputs: string, startIn: connection.Inputs | connection.Outputs },
+		} as {
+			inputs: string;
+			outputs: string;
+			startIn: connection.Inputs | connection.Outputs;
+		},
 		selectedElement: {
 			type: '' as element,
 			id: '' as string,
@@ -112,6 +115,38 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 								},
 							},
 						},
+					},
+					outputs: {
+						http: {
+							controllerName: {
+								action: {
+									description: 'action',
+								},
+							},
+						},
+					},
+				},
+				{
+					http: {
+						type: connection.Crumb,
+						open: true,
+						show: true,
+					},
+					'http.controllerName': {
+						type: connection.Crumb,
+						open: true,
+						show: true,
+					},
+					'http.controllerName.action': {
+						type: connection.Point,
+						state: {
+							linked: '',
+							offsetWidth: 0,
+							offsetHeight: 0,
+							pos_y: 0,
+							pos_x: 0,
+						},
+						show: true,
 					},
 				},
 				{
@@ -181,7 +216,8 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 						},
 						show: true,
 					},
-				}
+				},
+				{}
 			);
 		},
 		setDrawFlowParent(parent: HTMLElement) {
@@ -228,33 +264,45 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 			}
 			this.drawConnection(parseInt(nodeId), outPut);
 		},
-		switchCrumbConnection(nodeId: number, input: string){
-			if (this.nodes.items[nodeId].inputs[input].type !== connection.Crumb) return;
-				
-			this.nodes.items[nodeId].inputs[input].open = !
-				this.nodes.items[nodeId].inputs[input].open;
+		switchCrumbConnection(
+			nodeId: number,
+			connectionId: string,
+			connectionType: connection.Inputs | connection.Outputs
+		) {
+			if (
+				this.nodes.items[nodeId][connectionType][connectionId].type !==
+				connection.Crumb
+			)
+				return;
 
-			let Coincidences = input.match(/\./g)?.length || 0;
+			this.nodes.items[nodeId][connectionType][connectionId].open =
+				!this.nodes.items[nodeId][connectionType][connectionId].open;
 
-			if (this.nodes.items[nodeId].inputs[input].open) {
-				Object.entries(this.nodes.items[nodeId].inputs).forEach(
+			let Coincidences = connectionId.match(/\./g)?.length || 0;
+
+			if (this.nodes.items[nodeId][connectionType][connectionId].open) {
+				Object.entries(this.nodes.items[nodeId][connectionType]).forEach(
 					([key, value]) => {
-						if (key.includes(input) &&
-							(key.match(/\./g)?.length || 0) === Coincidences + 1){
+						if (
+							key.includes(connectionId) &&
+							(key.match(/\./g)?.length || 0) === Coincidences + 1
+						) {
 							value.show = true;
 						}
 					}
 				);
 			} else {
-				Object.entries(this.nodes.items[nodeId].inputs).forEach(([key, value]) => {
-					if (
-						key.includes(input) &&
-						(key.match(/\./g)?.length || 0) > Coincidences
-					) {
-						value.show = false;
-						value.open = false;
+				Object.entries(this.nodes.items[nodeId][connectionType]).forEach(
+					([key, value]) => {
+						if (
+							key.includes(connectionId) &&
+							(key.match(/\./g)?.length || 0) > Coincidences
+						) {
+							value.show = false;
+							value.open = false;
+						}
 					}
-				});
+				);
 			}
 		},
 		deleteElement(
@@ -442,12 +490,10 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 				this.pos_x = e_pos_x;
 				this.pos_y = e_pos_y;
 
-				this.nodes.items[this.nodes.selected].state.x = this.nodes.items[
-					this.nodes.selected
-				].state.x - x;
-				this.nodes.items[this.nodes.selected].state.y = this.nodes.items[
-					this.nodes.selected
-				].state.y - y;
+				this.nodes.items[this.nodes.selected].state.x =
+					this.nodes.items[this.nodes.selected].state.x - x;
+				this.nodes.items[this.nodes.selected].state.y =
+					this.nodes.items[this.nodes.selected].state.y - y;
 
 				this.updateConnectionNodes(this.nodes.selected);
 			}
@@ -458,16 +504,19 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 
 				let pos_x =
 					this.pos_x *
-						(this.parent.clientWidth / (this.parent.clientWidth * this.configurableOptions.zoom)) -
+						(this.parent.clientWidth /
+							(this.parent.clientWidth * this.configurableOptions.zoom)) -
 					this.parent.getBoundingClientRect().x *
-						(this.parent.clientWidth / (this.parent.clientWidth * this.configurableOptions.zoom));
+						(this.parent.clientWidth /
+							(this.parent.clientWidth * this.configurableOptions.zoom));
 				let pos_y =
 					this.pos_y *
 						(this.parent.clientHeight /
 							(this.parent.clientHeight * this.configurableOptions.zoom)) -
 					this.parent.getBoundingClientRect().y *
-						(this.parent.clientHeight / (this.parent.clientHeight * this.configurableOptions.zoom));
-				
+						(this.parent.clientHeight /
+							(this.parent.clientHeight * this.configurableOptions.zoom));
+
 				this.graphs.items[this.graphs.selected].point[
 					parseInt(this.selectedElement.id)
 				].pos_x = pos_x;
@@ -484,11 +533,7 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 			}
 			this.dispatch('mouseMove', { x: e_pos_x, y: e_pos_y });
 		},
-		click(
-			context: MouseEvent & TouchEvent,
-			clickedElement: element,
-			id: string
-		) {
+		click(context: MouseEvent & TouchEvent, clickedElement: element, id: string) {
 			if (!this.startBase(context, clickedElement)) return false;
 
 			switch (clickedElement) {
@@ -612,12 +657,17 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 				output_class: idOutPut,
 			});
 		},
-		addConnection(id_output: number, id_input: number, output_class: string, input_class: string) {
+		addConnection(
+			id_output: number,
+			id_input: number,
+			output_class: string,
+			input_class: string
+		) {
 			let nodeInput = this.nodes.items[id_input];
 			let nodeOutput = this.nodes.items[id_output];
 
 			let keyGraph = `${nodeInput.masterId}.${input_class}-${nodeOutput.masterId}.${output_class}`;
-			
+
 			// Check connection exist
 			if (this.graphs.items[keyGraph] === undefined) {
 				//Draw connection
@@ -646,12 +696,16 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 			});
 		},
 		updateConnection(eX: number, eY: number) {
-			const nodeConnection = this.nodes.items
-				[this.nodes.selected][this.connections.startIn]
-				[this.connections[this.connections.startIn]] as ConnectionPoint;
-			let parentWitdhZoom = this.parent.clientWidth / (this.parent.clientWidth * this.configurableOptions.zoom);
+			const nodeConnection = this.nodes.items[this.nodes.selected][
+				this.connections.startIn
+			][this.connections[this.connections.startIn]] as ConnectionPoint;
+			let parentWitdhZoom =
+				this.parent.clientWidth /
+				(this.parent.clientWidth * this.configurableOptions.zoom);
 			parentWitdhZoom = parentWitdhZoom || 0;
-			let parentHeightZoom = this.parent.clientHeight / (this.parent.clientHeight * this.configurableOptions.zoom);
+			let parentHeightZoom =
+				this.parent.clientHeight /
+				(this.parent.clientHeight * this.configurableOptions.zoom);
 			parentHeightZoom = parentHeightZoom || 0;
 
 			// let line_x =
@@ -660,17 +714,21 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 			// 	this.parent.getBoundingClientRect().x * parentWitdhZoom;
 
 			// let line_y = nodeConnection.state.offsetHeight / 2 + (nodeConnection.state.pos_y) - this.parent.getBoundingClientRect().y * parentHeightZoom;
-			
+
 			let x =
 				eX *
-					(this.parent.clientWidth / (this.parent.clientWidth * this.configurableOptions.zoom)) -
+					(this.parent.clientWidth /
+						(this.parent.clientWidth * this.configurableOptions.zoom)) -
 				this.parent.getBoundingClientRect().x *
-					(this.parent.clientWidth / (this.parent.clientWidth * this.configurableOptions.zoom));
+					(this.parent.clientWidth /
+						(this.parent.clientWidth * this.configurableOptions.zoom));
 			let y =
 				eY *
-					(this.parent.clientHeight / (this.parent.clientHeight * this.configurableOptions.zoom)) -
+					(this.parent.clientHeight /
+						(this.parent.clientHeight * this.configurableOptions.zoom)) -
 				this.parent.getBoundingClientRect().y *
-					(this.parent.clientHeight / (this.parent.clientHeight * this.configurableOptions.zoom));
+					(this.parent.clientHeight /
+						(this.parent.clientHeight * this.configurableOptions.zoom));
 
 			// let lineCurve = this.createCurvature(
 			// 	line_x,
@@ -688,19 +746,19 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 				this.parent.clientWidth / (this.parent.clientWidth * zoom);
 			parentWitdhZoom = parentWitdhZoom || 0;
 			let parentHeightZoom =
-				this.parent.clientHeight /
-				(this.parent.clientHeight * zoom);
+				this.parent.clientHeight / (this.parent.clientHeight * zoom);
 			parentHeightZoom = parentHeightZoom || 0;
 
-			const elemsOut = Object.keys(this.graphs.items)
-				.filter((key) => 
-					this.graphs.items[key].state.nodeOut === id
-				)
+			const elemsOut = Object.keys(this.graphs.items).filter(
+				(key) => this.graphs.items[key].state.nodeOut === id
+			);
 
-			let line_x,line_y,eX,eY = 0;
+			let line_x,
+				line_y,
+				eX,
+				eY = 0;
 			elemsOut.forEach((key) => {
 				if (this.graphs.items[key].point.length === 0) {
-
 					let nodeRelationId = this.graphs.items[key].state.nodeIn;
 
 					let inputRelation = this.nodes.items[nodeRelationId].inputs[
@@ -728,7 +786,6 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 					// );
 
 					// this.graphs.items[key].state.pathToDraw = lineCurve;
-
 				} else {
 					//points disabled temporaly
 				}
@@ -741,7 +798,8 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 			end_y: number,
 			type: string
 		) {
-			let hx1, hx2 = 0;
+			let hx1,
+				hx2 = 0;
 			//type openclose open close other
 			switch (type) {
 				case 'open':
@@ -806,12 +864,12 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 			});
 		},
 		// Nodes
-		addNode(
-			node: Node
-		) {
-
+		addNode(node: Node) {
 			// Check if node exist
-			let exist = Object.values(this.nodes.items).find((val) => val.masterId === node.masterId) !== undefined;
+			let exist =
+				Object.values(this.nodes.items).find(
+					(val) => val.masterId === node.masterId
+				) !== undefined;
 
 			if (exist) {
 				console.warn('Node already exist');
@@ -849,8 +907,8 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 			if (this.graphs.selected !== '') {
 				const graph = this.graphs.items[this.graphs.selected];
 
-				delete this.graphs.items[this.graphs.selected]
-				
+				delete this.graphs.items[this.graphs.selected];
+
 				this.dispatch('connectionRemoved', {
 					output_id: graph.state.nodeOut,
 					input_id: graph.state.nodeIn,
@@ -863,7 +921,7 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 		},
 		removeSingleConnection(id: string) {
 			delete this.graphs.items[id];
-			
+
 			this.dispatch('connectionRemoved', {
 				graphId: id,
 			});

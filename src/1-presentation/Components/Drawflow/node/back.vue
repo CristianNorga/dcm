@@ -1,4 +1,5 @@
 <script setup lang="ts">
+
 const storeDrawFlow = useDrawFlowStore();
 
 const props = defineProps(
@@ -34,10 +35,14 @@ const namespace = storeDrawFlow.nodes.items[props.index].data.namespace;
     </div>
     <div>
       <div class="flex flex-col w-full relative">
-        <DrawflowNodeConnection 
+        <DrawflowNodeConnectionInput 
         v-for="(node, key) in storeDrawFlow.nodes.items[props.index].inputs" 
         :key="key" :index="key" :indexNode="index" class="list">
-        </DrawflowNodeConnection>
+        </DrawflowNodeConnectionInput>
+        <DrawflowNodeConnectionOutput
+        v-for="(node, key) in storeDrawFlow.nodes.items[props.index].outputs"
+        :key="key" :index="key" :indexNode="index" class="list">
+        </DrawflowNodeConnectionOutput>
       </div>
     </div>
   </div>

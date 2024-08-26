@@ -28,12 +28,14 @@ export class Node {
 		id: number,
 		type: string,
 		data: any,
-		inputs: { [key: string]: ConnectionBread & ConnectionPoint }
+		inputs: { [key: string]: ConnectionBread & ConnectionPoint },
+		outputs: { [key: string]: ConnectionBread & ConnectionPoint }
 	) {
 		this.masterId = masterId;
 		this.id = id;
 		this.type = type;
 		this.data = data;
 		this.inputs = inputs;
+		this.outputs = outputs;
 	}
 }
