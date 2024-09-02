@@ -31,7 +31,7 @@ const select = (event) => {
 
 const nodeClasses = computed(() => {
 	return {
-		selected: storeDrawFlow.nodes.selected === props.key,
+		selected: storeDrawFlow.nodes.selected === index,
 	};
 });
 

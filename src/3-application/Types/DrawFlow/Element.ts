@@ -65,21 +65,17 @@ export type BoardData = {
 
 //input - connection
 export type PositionStates = {
-	linked: string
+	linked: string;
 	offsetWidth: number;
 	offsetHeight: number;
-	pos_y: number;
-	pos_x: number;
+	pos_y?: number;
+	pos_x?: number;
+	assignment?: number;
 };
 
-export type ConnectionBread = {
+export type ConnectionCrumb = {
 	open?: boolean;
 	type: connection;
 	show: boolean;
-};
-
-export type ConnectionPoint = {
-	type: connection;
 	state?: PositionStates;
-	show: boolean;
 };

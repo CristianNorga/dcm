@@ -1,8 +1,6 @@
 import type {
 	NodeStates,
-	PositionStates,
-	ConnectionBread,
-	ConnectionPoint,
+	ConnectionCrumb,
 } from '../Types/DrawFlow/Element';
 import { statusLife } from '../Enums/DrawFlow.enum';
 
@@ -18,8 +16,8 @@ export class Node {
 		width: 100,
 		height: 100,
 	};
-	inputs: { [key: string]: ConnectionBread & ConnectionPoint } = {};
-	outputs: { [key: string]: ConnectionBread & ConnectionPoint } = {};
+	inputs: { [key: string]: ConnectionCrumb } = {};
+	outputs: { [key: string]: ConnectionCrumb } = {};
 	data: any;
 
 	// Constructor
@@ -28,8 +26,8 @@ export class Node {
 		id: number,
 		type: string,
 		data: any,
-		inputs: { [key: string]: ConnectionBread & ConnectionPoint },
-		outputs: { [key: string]: ConnectionBread & ConnectionPoint }
+		inputs: { [key: string]: ConnectionCrumb },
+		outputs: { [key: string]: ConnectionCrumb }
 	) {
 		this.masterId = masterId;
 		this.id = id;

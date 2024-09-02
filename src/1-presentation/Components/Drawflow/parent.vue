@@ -14,6 +14,7 @@ const position = (event) => {
 
 const dragEnd = (event) => {
   storeDrawFlow.dragEnd(event);
+  storeDrawFlow.endConnection(event);
 };
 
 onMounted(() => {
@@ -76,6 +77,12 @@ const stylesDrawCP = computed(() => {
   cursor: grab;
   &:active {
     cursor: grabbing;
+  }
+  .connection-circle--input {
+    cursor: crosshair;
+    &:active {
+      cursor: crosshair;
+    }
   }
 }
 </style>

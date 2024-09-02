@@ -37,11 +37,11 @@ const namespace = storeDrawFlow.nodes.items[props.index].data.namespace;
       <div class="flex flex-col w-full relative">
         <DrawflowNodeConnectionInput 
         v-for="(node, key) in storeDrawFlow.nodes.items[props.index].inputs" 
-        :key="key" :index="key" :indexNode="index" class="list">
+        :key="key" :index="key as string" :indexNode="index" class="list">
         </DrawflowNodeConnectionInput>
         <DrawflowNodeConnectionOutput
         v-for="(node, key) in storeDrawFlow.nodes.items[props.index].outputs"
-        :key="key" :index="key" :indexNode="index" class="list">
+        :key="key" :index="key as string" :indexNode="index" class="list">
         </DrawflowNodeConnectionOutput>
       </div>
     </div>

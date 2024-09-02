@@ -1,8 +1,10 @@
 import { defineStore } from 'pinia';
 import type { Events } from '../Types/DrawFlow/Events';
 import type {
-	ElementStates,Board,Graph,
-	ConnectionPoint,ConnectionBread
+	ElementStates,
+	Board,
+	Graph,
+	ConnectionCrumb,
 } from '../Types/DrawFlow/Element';
 import { connection, element, statusLife } from '@enums/DrawFlow.enum';
 import { Node } from '@entities/Node';
@@ -47,6 +49,7 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 			inputs: string;
 			outputs: string;
 			startIn: connection.Inputs | connection.Outputs;
+			endIn: connection.Inputs | connection.Outputs;
 		},
 		selectedElement: {
 			type: '' as element,
@@ -98,6 +101,7 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 	actions: {
 		//custom
 		loadDataExample() {
+			if (this.nodes.items[1] !== undefined) return;
 			let nodeMain = new Node(
 				'namespace1.Servicio1',
 				1,
@@ -143,8 +147,7 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 							linked: '',
 							offsetWidth: 0,
 							offsetHeight: 0,
-							pos_y: 0,
-							pos_x: 0,
+							assignment: 1,
 						},
 						show: true,
 					},
@@ -154,11 +157,23 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 						type: connection.Crumb,
 						open: true,
 						show: true,
+						state: {
+							linked: '',
+							offsetWidth: 0,
+							offsetHeight: 0,
+							assignment: 4,
+						},
 					},
 					'http.controllerName': {
 						type: connection.Crumb,
 						open: true,
 						show: true,
+						state: {
+							linked: '',
+							offsetWidth: 0,
+							offsetHeight: 0,
+							assignment: 5,
+						},
 					},
 					'http.controllerName.action': {
 						type: connection.Point,
@@ -166,8 +181,7 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 							linked: '',
 							offsetWidth: 0,
 							offsetHeight: 0,
-							pos_y: 0,
-							pos_x: 0,
+							assignment: 6,
 						},
 						show: true,
 					},
@@ -199,11 +213,23 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 						type: connection.Crumb,
 						open: true,
 						show: true,
+						state: {
+							linked: '',
+							offsetWidth: 0,
+							offsetHeight: 0,
+							assignment: 1,
+						},
 					},
 					'http.controllerName': {
 						type: connection.Crumb,
 						open: true,
 						show: true,
+						state: {
+							linked: '',
+							offsetWidth: 0,
+							offsetHeight: 0,
+							assignment: 2,
+						},
 					},
 					'http.controllerName.action': {
 						type: connection.Point,
@@ -211,14 +237,31 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 							linked: '',
 							offsetWidth: 0,
 							offsetHeight: 0,
-							pos_y: 0,
-							pos_x: 0,
+							assignment: 3,
 						},
 						show: true,
 					},
 				},
 				{}
 			);
+
+			// this.graphs.items[
+			// 	'namespace1.Servicio1.http.controllerName.action'
+			// ] = {
+			// 	id: 'namespace1.Servicio1.http.controllerName.action',
+			// 	name: 'Connection',
+			// 	state: {
+			// 		status: statusLife.Active,
+			// 		pathToDraw:
+			// 			' M -58.65625 461 C 363.34375 461 363.34375 440 785.34375  440',
+			// 		nodeIn: 1,
+			// 		nodeOut: 2,
+			// 		input: 'http.controllerName.action',
+			// 		output: 'http.controllerName.action',
+			// 	},
+			// 	point: [],
+			// 	data: {},
+			// };
 		},
 		setDrawFlowParent(parent: HTMLElement) {
 			this.parent = parent;
@@ -248,12 +291,18 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 		},
 		startConnection(
 			context: MouseEvent & TouchEvent,
-			clickedElement: element,
-			nodeId: string,
+			clickedElement: element.Input | element.Output,
+			nodeId: number,
 			outPut: string
 		) {
-			if (!this.startBase(context, clickedElement, nodeId)) return false;
+			if (!this.startBase(context, clickedElement, nodeId.toString()))
+				return false;
 			this.connection = true;
+			this.connections.startIn = (clickedElement + 's') as
+				| connection.Inputs
+				| connection.Outputs;
+			this.connections[this.connections.startIn] = outPut;
+
 			if (this.nodes.selected > 0) {
 				this.nodes.selected = 0;
 				this.dispatch('nodeUnselected', true);
@@ -262,7 +311,69 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 				this.graphs.selected = '';
 				this.removeReouteConnectionSelected();
 			}
-			this.drawConnection(parseInt(nodeId), outPut);
+			this.drawConnection(nodeId, outPut);
+		},
+		endConnection(
+			context: MouseEvent & TouchEvent,
+			clickedElement: connection.Inputs | connection.Outputs = connection.Inputs,
+			nodeId: number = 0,
+			outPut: string = ''
+		) {
+			debugger;
+			if (this.connection === false) return;
+			console.log(
+				'endConnection',
+				this.graphs.items[
+					this.selectedElement.id +'-'+ this.nodes.items[nodeId]?.masterId + '.' + outPut
+				] === undefined
+			);
+			if (
+				this.connections[this.connections.startIn] &&
+				outPut &&
+				this.graphs.items[
+					this.selectedElement.id +
+						'-' +
+						this.nodes.items[nodeId].masterId +
+						'.' +
+						outPut
+				] === undefined
+			) {
+				let masterId =
+					this.selectedElement.id +
+					'-' +
+					this.nodes.items[nodeId].masterId +
+					'.' +
+					outPut;
+				// Conection no exist save connection
+				this.graphs.items[masterId] = this.graphs.items[this.selectedElement.id];
+				this.graphs.items[masterId].id = masterId;
+				delete this.graphs.items[this.selectedElement.id];
+				// var id_input = input_id.slice(5);
+				// var id_output = output_id.slice(5);
+				// this.drawflow.drawflow[this.module].data[id_output].outputs[
+				// 	output_class
+				// ].connections.push({ node: id_input, output: input_class });
+				// this.drawflow.drawflow[this.module].data[id_input].inputs[
+				// 	input_class
+				// ].connections.push({ node: id_output, input: output_class });
+				// this.updateConnectionNodes('node-' + id_output);
+				// this.updateConnectionNodes('node-' + id_input);
+				// 🚩 como logramo obtener el id (number) del primer node?
+				// this.dispatch('connectionCreated', {
+				// 	output_id: clickedElement === connection.Outputs ? nodeId : 0,
+				// 	input_id: clickedElement === connection.Outputs ? nodeId : 0,
+				// 	output_class: this.connections[connection.Outputs],
+				// 	input_class: this.connections[connection.Inputs],
+				// });
+			} else {
+				// Remove Connection;
+				this.dispatch('connectionCancel', true);
+				delete this.graphs.items[this.selectedElement.id];
+			}
+
+			this.connections[connection.Inputs] = '';
+			this.connections[connection.Outputs] = '';
+			this.connection = false;
 		},
 		switchCrumbConnection(
 			nodeId: number,
@@ -361,98 +472,9 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 				this.canvas_y = this.canvas_y + -(this.pos_y - e_pos_y);
 				this.editor_selected = false;
 			}
-			// if (this.connection === true) {
-			// 	if (
-			// 		ele_last.classList[0] === 'input' ||
-			// 		(this.force_first_input &&
-			// 			(ele_last.closest('.drawflow_content_node') != null ||
-			// 				ele_last.classList[0] === 'drawflow-node'))
-			// 	) {
-			// 		if (
-			// 			this.force_first_input &&
-			// 			(ele_last.closest('.drawflow_content_node') != null ||
-			// 				ele_last.classList[0] === 'drawflow-node')
-			// 		) {
-			// 			if (ele_last.closest('.drawflow_content_node') != null) {
-			// 				var input_id = ele_last.closest('.drawflow_content_node').parentElement
-			// 					.id;
-			// 			} else {
-			// 				var input_id = ele_last.id;
-			// 			}
-			// 			if (
-			// 				Object.keys(this.getNodeFromId(input_id.slice(5)).inputs).length === 0
-			// 			) {
-			// 				var input_class = false;
-			// 			} else {
-			// 				var input_class = 'input_1';
-			// 			}
-			// 		} else {
-			// 			// Fix connection;
-			// 			var input_id = ele_last.parentElement.parentElement.id;
-			// 			var input_class = ele_last.classList[1];
-			// 		}
-			// 		var output_id = this.ele_selected.parentElement.parentElement.id;
-			// 		var output_class = this.ele_selected.classList[1];
-
-			// 		if (output_id !== input_id && input_class !== false) {
-			// 			if (
-			// 				this.container.querySelectorAll(
-			// 					'.connection.node_in_' +
-			// 						input_id +
-			// 						'.node_out_' +
-			// 						output_id +
-			// 						'.' +
-			// 						output_class +
-			// 						'.' +
-			// 						input_class
-			// 				).length === 0
-			// 			) {
-			// 				// Conection no exist save connection
-
-			// 				this.connection_ele.classList.add('node_in_' + input_id);
-			// 				this.connection_ele.classList.add('node_out_' + output_id);
-			// 				this.connection_ele.classList.add(output_class);
-			// 				this.connection_ele.classList.add(input_class);
-			// 				var id_input = input_id.slice(5);
-			// 				var id_output = output_id.slice(5);
-
-			// 				this.drawflow.drawflow[this.module].data[id_output].outputs[
-			// 					output_class
-			// 				].connections.push({ node: id_input, output: input_class });
-			// 				this.drawflow.drawflow[this.module].data[id_input].inputs[
-			// 					input_class
-			// 				].connections.push({ node: id_output, input: output_class });
-			// 				this.updateConnectionNodes('node-' + id_output);
-			// 				this.updateConnectionNodes('node-' + id_input);
-			// 				this.dispatch('connectionCreated', {
-			// 					output_id: id_output,
-			// 					input_id: id_input,
-			// 					output_class: output_class,
-			// 					input_class: input_class,
-			// 				});
-			// 			} else {
-			// 				this.dispatch('connectionCancel', true);
-			// 				this.connection_ele.remove();
-			// 			}
-
-			// 			this.connection_ele = null;
-			// 		} else {
-			// 			// Connection exists Remove Connection;
-			// 			this.dispatch('connectionCancel', true);
-			// 			this.connection_ele.remove();
-			// 			this.connection_ele = null;
-			// 		}
-			// 	} else {
-			// 		// Remove Connection;
-			// 		this.dispatch('connectionCancel', true);
-			// 		this.connection_ele.remove();
-			// 		this.connection_ele = null;
-			// 	}
-			// }
 
 			this.drag = false;
 			this.drag_point = false;
-			this.connection = false;
 			this.nodes.selected = 0;
 			// this.ele_selected = null;
 			this.editor_selected = false;
@@ -634,7 +656,7 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 		},
 		// Draw
 		drawConnection(nodeId: number, idOutPut: string) {
-			let key = `${nodeId}.${idOutPut}`;
+			let key = `${this.nodes.items[nodeId].masterId}.${idOutPut}`;
 			this.graphs.items[key] = {
 				id: key,
 				name: 'Connection',
@@ -696,9 +718,10 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 			});
 		},
 		updateConnection(eX: number, eY: number) {
-			const nodeConnection = this.nodes.items[this.nodes.selected][
-				this.connections.startIn
-			][this.connections[this.connections.startIn]] as ConnectionPoint;
+			const node = this.nodes.items[this.nodes.selected];
+			const nodeConnection =
+				node[this.connections.startIn][this.connections[this.connections.startIn]];
+
 			let parentWitdhZoom =
 				this.parent.clientWidth /
 				(this.parent.clientWidth * this.configurableOptions.zoom);
@@ -708,12 +731,16 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 				(this.parent.clientHeight * this.configurableOptions.zoom);
 			parentHeightZoom = parentHeightZoom || 0;
 
-			// let line_x =
-			// 	nodeConnection.state.offsetWidth / 2 +
-			// 	nodeConnection.state.pos_x -
-			// 	this.parent.getBoundingClientRect().x * parentWitdhZoom;
+			let line_x = node.state.x + 200;
 
-			// let line_y = nodeConnection.state.offsetHeight / 2 + (nodeConnection.state.pos_y) - this.parent.getBoundingClientRect().y * parentHeightZoom;
+			let heightNode = 168;
+			let heightConnection = 45;
+
+			let line_y =
+				node.state.y +
+				heightNode +
+				nodeConnection.state!.assignment! * heightConnection -
+				heightConnection / 2;
 
 			let x =
 				eX *
@@ -721,23 +748,19 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 						(this.parent.clientWidth * this.configurableOptions.zoom)) -
 				this.parent.getBoundingClientRect().x *
 					(this.parent.clientWidth /
-						(this.parent.clientWidth * this.configurableOptions.zoom));
+						(this.parent.clientWidth * this.configurableOptions.zoom)) -
+				this.boards.x;
 			let y =
 				eY *
 					(this.parent.clientHeight /
 						(this.parent.clientHeight * this.configurableOptions.zoom)) -
 				this.parent.getBoundingClientRect().y *
 					(this.parent.clientHeight /
-						(this.parent.clientHeight * this.configurableOptions.zoom));
+						(this.parent.clientHeight * this.configurableOptions.zoom)) -
+				this.boards.y;
 
-			// let lineCurve = this.createCurvature(
-			// 	line_x,
-			// 	line_y,
-			// 	x,
-			// 	y,
-			// 	'openclose'
-			// );
-			// this.graphs.items[this.graphs.selected].state.pathToDraw = lineCurve;
+			let lineCurve = this.createCurvature(line_x, line_y, x, y, 'openclose');
+			this.graphs.items[this.graphs.selected].state.pathToDraw = lineCurve;
 		},
 		updateConnectionNodes(id: number) {
 			const precanvas = this.parent;
@@ -761,17 +784,17 @@ export const useDrawFlowStore = defineStore('utilsStore', {
 				if (this.graphs.items[key].point.length === 0) {
 					let nodeRelationId = this.graphs.items[key].state.nodeIn;
 
-					let inputRelation = this.nodes.items[nodeRelationId].inputs[
-						this.graphs.items[key].state.output
-					] as ConnectionPoint;
+					let inputRelation =
+						this.nodes.items[nodeRelationId].inputs[
+							this.graphs.items[key].state.output
+						];
 
 					// eX = inputRelation.state.offsetWidth / 2 + inputRelation.state.pos_x - precanvas.getBoundingClientRect().x * parentWitdhZoom;
 
 					// eY = inputRelation.state.offsetHeight / 2 + inputRelation.state.pos_y - precanvas.getBoundingClientRect().y * parentHeightZoom;
 
-					let outputRelation = this.nodes.items[id].outputs[
-						this.graphs.items[key].state.input
-					] as ConnectionPoint;
+					let outputRelation =
+						this.nodes.items[id].outputs[this.graphs.items[key].state.input];
 
 					// line_x = outputRelation.state.offsetWidth / 2 + outputRelation.state.pos_x - precanvas.getBoundingClientRect().x * parentWitdhZoom;
 

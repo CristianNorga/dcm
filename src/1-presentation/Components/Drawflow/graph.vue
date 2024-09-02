@@ -3,10 +3,10 @@ const storeDrawFlow = useDrawFlowStore();
 import { element } from '@enums/DrawFlow.enum';
 
 // props
-const props = defineProps(['key'])
+const props = defineProps(['index'])
 
 const select = (event) => {
-	storeDrawFlow.click(event, element.Graph, props.key);
+	storeDrawFlow.click(event, element.Graph, props.index);
 };
 
 const graphClassess = computed(() => {
@@ -20,7 +20,7 @@ const graphClassess = computed(() => {
 
 const mainPathClasses = computed(() => {
   return {
-    'selected': storeDrawFlow.graphs.selected === props.key,
+    'selected': storeDrawFlow.graphs.selected === props.index,
   };
 });
 
@@ -32,7 +32,22 @@ const d = computed(() => {
 
 <template>
   <svg :class="graphClassess" class="connection" @click="select">
-    <path :class="mainPathClasses" class="main-path" :d="d"></path>
-    <circle :class="mainPathClasses" class="point" cx="741" cy="202" r="6"></circle>
+    <path :class="mainPathClasses" class="main-path" :d="storeDrawFlow.graphs.items[props.index].state.pathToDraw"></path>
+    <!-- <circle :class="mainPathClasses" class="point" cx="741" cy="202" r="6"></circle> -->
   </svg>
 </template>
+
+<style lang="css">
+.connection {
+  z-index: 0;
+  position: absolute;
+  overflow: visible !important;
+  pointer-events: none;
+}
+.main-path {
+  fill: none;
+  pointer-events: all;
+  stroke: rgb(var(--color-primary-400));
+  stroke-width: 3px;
+}
+</style>
