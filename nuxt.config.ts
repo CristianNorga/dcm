@@ -1,36 +1,49 @@
 import path from 'path';
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-	srcDir: './src/1-presentation',
-	serverDir: './src/2-infrastructure/Server',
+	compatibilityDate: '2024-08-01',
+	srcDir: './src',
 	components: [
 		{
-			path: './Components',
+			path: './presentation/components',
 		},
 	],
 	dir: {
-		layouts: './Layouts',
-		pages: './Pages',
+		layouts: './presentation/layouts',
+		pages: './presentation/pages',
 	},
+	// serverHandlers: [
+	// 	{
+	// 		route: '/api/resources',
+	// 		handler: '~/2-server/server/api/resources/index.get.ts',
+	// 	},
+	// ],
 	alias: {
-		'@models': path.resolve(__dirname, './src/3-application/Models'),
-		'@stores': path.resolve(__dirname, './src/3-application/Stores'),
-		'@enums': path.resolve(__dirname, './src/3-application/Enums'),
-		'@interfaces': path.resolve(__dirname, './src/3-application/Interfaces'),
-		'@types': path.resolve(__dirname, './src/3-application/Types'),
-		'@entities': path.resolve(__dirname, './src/3-application/Entities'),
-		'@components': path.resolve(__dirname, './src/1-presentation/Components'),
+		'@models': path.resolve(__dirname, './src/application/models'),
+		'@stores': path.resolve(__dirname, './src/application/stores'),
+		'@enums': path.resolve(__dirname, './src/application/enums'),
+		'@interfaces': path.resolve(__dirname, './src/application/interfaces'),
+		'@types': path.resolve(__dirname, './src/application/types'),
+		'@entities': path.resolve(__dirname, './src/application/entities'),
+		'@components': path.resolve(__dirname, './src/presentation/components'),
 	},
-	modules: [// 'nuxt-mongoose',
-    '@vueuse/nuxt', '@nuxt/ui', '@pinia/nuxt', "@nuxt/icon"],
-	// mongoose: {
-	// 	uri: 'process.env.MONGODB_URI',
-	// 	options: {},
-	// 	modelsDir: 'src/3-application/Models/Mongo',
-	// 	devtools: true,
-	// },
+	debug: true,
+	modules: [
+		'@vueuse/nuxt',
+		'@nuxt/ui',
+		'@pinia/nuxt',
+		'@nuxt/icon',
+		'nuxt-mongoose',
+	],
+	mongoose: {
+		uri: process.env.MONGODB_URI,
+		options: {},
+		modelsDir: './src/application/models/mongo',
+		devtools: true,
+	},
 	pinia: {
-		storesDirs: ['./src/3-application/Stores/**'],
+		storesDirs: ['./src/application/stores/**'],
 	},
 	tailwindcss: {
 		cssPath: ['~/assets/css/tailwind.css', { injectPosition: 'last' }],
