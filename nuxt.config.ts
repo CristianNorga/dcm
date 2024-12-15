@@ -3,15 +3,16 @@ import path from 'path';
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
 	compatibilityDate: '2024-08-01',
-	srcDir: './src',
+	srcDir: './src/presentation',
+	serverDir: './src/server',
 	components: [
 		{
-			path: './presentation/components',
+			path: './components',
 		},
 	],
 	dir: {
-		layouts: './presentation/layouts',
-		pages: './presentation/pages',
+		layouts: './layouts',
+		pages: './pages',
 	},
 	// serverHandlers: [
 	// 	{
@@ -28,7 +29,6 @@ export default defineNuxtConfig({
 		'@entities': path.resolve(__dirname, './src/application/entities'),
 		'@components': path.resolve(__dirname, './src/presentation/components'),
 	},
-	debug: true,
 	modules: [
 		'@vueuse/nuxt',
 		'@nuxt/ui',
@@ -54,5 +54,6 @@ export default defineNuxtConfig({
 		config: {},
 		viewer: true,
 	},
+	// debug: true,
 	devtools: { enabled: true },
 });

@@ -31,22 +31,21 @@ export const useResourceStore = defineStore('ResourceStore', {
 			// }
 		},
 		async loadResources() {
-			console.log('Resource loadResources');
 			this.loading = true;
 			this.lastUpdated = new Date();
-			const response = await $fetch('/api/resource', {
+			const response = (await $fetch('/api/resource', {
 				method: 'GET',
-			}) as Response;
+			})) as Resource[];
 
-			if (response.status !== 200) {
-				throw new Error('Failed to load resources');
+			if (response.length === 0) {
+				this.origin = [];
+			} else {
+				this.origin = response;
 			}
-
-			this.origin = (await response.json()) as Resource[] | Service[];
+			this.loading = false;
 		},
 		getResources(): Resource[] | Service[] {
       console.log('Resource getResources');
-      debugger;
       if (this.lastUpdated === null || this.lastUpdated < new Date(Date.now() - 8000)) {
         this.loadResources();
       }
