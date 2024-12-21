@@ -1,6 +1,6 @@
 <template>
 	<div
-		class="relative bg-primary hover:bg-primary/90 transition-[background] backdrop-blur z-50 app-banner"
+		class="relative bg-primary-500 hover:bg-primary-500/90 transition-[background] backdrop-blur z-50 app-banner"
 		data-v-01185dcb="">
 		<div class="mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl py-2" data-v-01185dcb="">
 			<div class="flex items-center justify-between gap-2" data-v-01185dcb="">
@@ -13,8 +13,8 @@
 						class="i-heroicons-rocket-launch w-5 h-5 align-top flex-shrink-0 pointer-events-none mr-2"
 						data-v-01185dcb=""
 					></span
-					><span class="font-semibold" data-v-01185dcb="">DCM Beta v1.0</span> is
-					out with Services!
+					><span class="font-semibold" data-v-01185dcb="">DCM Pre-Alpha</span> is
+					out with Resources!
 				</p>
 				<div class="flex items-center justify-end lg:flex-1" data-v-01185dcb="">
 					<button

@@ -26,7 +26,7 @@ const router = useRouter();
 								<span
 									class="inline-flex items-center text-xs px-1.5 py-0.5 bg-primary-50 dark:bg-primary-400 dark:bg-opacity-10 text-primary-500 dark:text-primary-400 ring-1 ring-inset ring-primary-500 dark:ring-primary-400 ring-opacity-25 dark:ring-opacity-25 -mb-[2px] rounded font-semibold"
 									>
-									v1.0</span
+									Pre-Alpha</span
 								>
 							</div></a
 						>
@@ -53,7 +53,7 @@ const router = useRouter();
 								class="inline-flex w-full"
 								role="button"
 							>
-								<button @click="router.push('/boards')" class="text-sm/6 font-semibold flex items-center gap-1 text-primary">
+								<button @click="router.push('/boards')" class="text-sm/6 font-semibold flex items-center gap-1 text-primary disabled:opacity-50" disabled>
 									Tableros
 								</button>
 							</div>
@@ -65,7 +65,7 @@ const router = useRouter();
 								class="inline-flex w-full"
 								role="button"
 							>
-								<button class="text-sm/6 font-semibold flex items-center gap-1 text-primary">
+								<button class="text-sm/6 font-semibold flex items-center gap-1 text-primary disabled:opacity-50" disabled>
 									Migraciones
 								</button>
 							</div>
