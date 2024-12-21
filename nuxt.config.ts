@@ -3,16 +3,15 @@ import path from 'path';
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
 	compatibilityDate: '2024-08-01',
-	srcDir: './src/presentation',
-	serverDir: './src/server',
+	srcDir: './src',
 	components: [
 		{
-			path: './components',
+			path: './presentation/components',
 		},
 	],
 	dir: {
-		layouts: './layouts',
-		pages: './pages',
+		layouts: './presentation/layouts',
+		pages: './presentation/pages',
 	},
 	// serverHandlers: [
 	// 	{

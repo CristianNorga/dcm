@@ -1,5 +1,5 @@
 <script setup lang="ts"></script>
 
 <template>
-	<NodeService />
+	<ResourceBase :resourcekey="0" />
 </template>

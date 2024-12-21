@@ -1,9 +1,9 @@
 <template>
 	<div
-		class="py-24 sm:py-32 md:py-40 relative dark:bg-gradient-to-b from-gray-950 to-gray-900 h-svh"
+		class="relative dark:bg-gradient-to-b from-gray-950 to-gray-900 h-full flex"
 	>
 		<div
-			class="mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl gap-16 sm:gap-y-24 flex flex-col"
+			class="m-auto px-4 sm:px-6 lg:px-8 max-w-7xl gap-16 sm:gap-y-24 flex flex-col"
 		>
 			<div class="text-center relative z-[1]">
 				<h1

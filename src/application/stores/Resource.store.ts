@@ -31,6 +31,7 @@ export const useResourceStore = defineStore('ResourceStore', {
 			// }
 		},
 		async loadResources() {
+			console.log('Resource loadResources');
 			this.loading = true;
 			this.lastUpdated = new Date();
 			const response = (await $fetch('/api/resource', {
@@ -51,10 +52,5 @@ export const useResourceStore = defineStore('ResourceStore', {
       }
       return this.origin;
     },
-	},
-	getters: {
-		// getResources(): Resource[] | Service[] {
-		// 	return this.origin;
-		// },
-	},
+	}
 });

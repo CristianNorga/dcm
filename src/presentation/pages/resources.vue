@@ -1,13 +1,10 @@
 <script setup lang="ts">
 const utilDrawFlow = useUtilsStore();
-const ResourceStorage = useResourceStore();
+const resourceStorage = useResourceStore();
 import type { Resource, Service } from '../../application/types/resource/base';
-// import { ResourceTypes } from '~~/src/application/enums/Resource.enum';
 import { ResourceTypes } from '@enums/Resource.enum';
 
-/// list enum in string array
 const typeResource  = Object.values(ResourceTypes).map((value) => {
-  //return capitalize(value);
   return value.charAt(0).toUpperCase() + value.slice(1);
 });
 
@@ -18,7 +15,7 @@ const stateResource = reactive({
 })
 
 const resources = ref<Resource[]>([])
-resources.value = ResourceStorage.getResources();
+resources.value = resourceStorage.getResources();
 
 const typeDisplay = [{
   key: 'list',
@@ -89,7 +86,7 @@ const createResource = () => {
 const saveChanges = () => {
   console.log("saveChanges");
   utilDrawFlow.closeModal();
-  ResourceStorage.createResource(stateResource.namespace, stateResource.name, stateResource.type);
+  resourceStorage.createResource(stateResource.namespace, stateResource.name, stateResource.type);
 }
 
 </script>
@@ -98,7 +95,7 @@ const saveChanges = () => {
   <div>
     <NuxtLayout name="focus">
       <template #header>
-        <HeaderBasic>
+        <SectionNavBasic>
           <template #items>
               <ul class="items-center gap-x-8 hidden lg:flex">
                 <li class="relative">
@@ -162,7 +159,7 @@ const saveChanges = () => {
                 </li>
               </ul>
           </template>
-        </HeaderBasic>
+        </SectionNavBasic>
       </template>
       <template #options>
         <div class="flex flex-col pt-6">
@@ -263,9 +260,14 @@ const saveChanges = () => {
         </div>
       </template>
       <template #content>
-        <div class="grid grid-cols-12 gap-4 mt-6">
-          <ResourceBase  v-for="(resource, key) in ResourceStorage.getResources()"/>
-        </div>
+        <ClientOnly fallback-tag="div">
+          <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-6">
+            <ResourceBase  v-for="(resource, key) in resources" :key="key" :resourcekey="key" />
+          </div>
+          <template #fallback>
+            <p>Loading resources...</p>
+          </template>
+        </ClientOnly>
       </template>
     </NuxtLayout>
 
