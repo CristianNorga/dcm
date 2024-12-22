@@ -8,6 +8,10 @@ const typeResource  = Object.values(ResourceTypes).map((value) => {
   return value.charAt(0).toUpperCase() + value.slice(1);
 });
 
+const stateComponent = reactive({
+  typeDisplay: 'list' as 'list' | 'block',
+})
+
 const stateResource = reactive({
   name: '' as string,
   namespace: '' as string,
@@ -17,7 +21,7 @@ const stateResource = reactive({
 const resources = ref<Resource[]>([])
 resources.value = resourceStorage.getResources();
 
-const typeDisplay = [{
+const typeDisplayList = [{
   key: 'list',
   label: 'list',
   icon: 'i-heroicons-bars-3-16-solid'
@@ -89,6 +93,11 @@ const saveChanges = () => {
   resourceStorage.createResource(stateResource.namespace, stateResource.name, stateResource.type);
 }
 
+const selectDisplayType = (index: number) => {
+  const item = typeDisplayList[index];
+  stateComponent.typeDisplay = item.label as 'list' | 'block';
+};
+
 </script>
 
 <template>
@@ -135,15 +144,10 @@ const saveChanges = () => {
                   <div class="relative">
                     <div class="inline-flex w-full" role="button">
                       <UTabs 
-                      :items="typeDisplay" 
+                      :items="typeDisplayList" 
                       class="w-full"
-                      :ui="{ container: 'relative hidden' }">
-                        <template #default="{ item, index, selected }">
-                          <div class="flex items-center gap-2 relative truncate">
-                            <UIcon :name="item.icon" class="w-4 h-4 flex-shrink-0" />
-                            <span v-if="selected" class="absolute -right-4 w-2 h-2 rounded-full bg-primary-500 dark:bg-primary-400" />
-                          </div>
-                        </template>
+                      :ui="{ container: 'relative hidden' }"
+                      @change="selectDisplayType">
                       </UTabs>
                     </div>
                   </div>
@@ -261,8 +265,10 @@ const saveChanges = () => {
       </template>
       <template #content>
         <ClientOnly fallback-tag="div">
-          <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-6">
-            <ResourceBase  v-for="(resource, key) in resources" :key="key" :resourcekey="key" />
+          <div class="grid grid-cols-12 mt-6 gap-4">
+            <ResourceBase  v-for="(resource, key) in resources" :key="key" :resourcekey="key"
+              :class="stateComponent.typeDisplay === 'list' ? 'col-span-12' : 'col-span-6 lg:col-span-4 xl:col-span-3'"
+             />
           </div>
           <template #fallback>
             <p>Loading resources...</p>

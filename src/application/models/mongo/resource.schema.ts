@@ -1,6 +1,6 @@
 import { defineMongooseModel } from '#nuxt/mongoose';
 import { Types } from 'mongoose';
-import type { Resource,Service } from '../../application/types/resource/base';
+import type { Resource,Service } from '../../types/resource/base';
 
 export const ResourceSchema = defineMongooseModel<Resource | Service>('Resources', {
 	id: {
@@ -21,7 +21,7 @@ export const ResourceSchema = defineMongooseModel<Resource | Service>('Resources
 		required: true,
 	},
 	owner: {
-		type: String,
+		type: [String],
 		required: false,
 	},
 	inputs: {

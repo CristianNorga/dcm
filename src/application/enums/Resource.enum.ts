@@ -6,3 +6,9 @@ export enum ResourceTypes {
   Topic = 'topic',
   Function = 'function',
 }
+
+export enum InfraestructureTypes {
+  OnPremise = 'on-premise',
+  Cloud = 'cloud',
+  Hybrid = 'hybrid',
+}

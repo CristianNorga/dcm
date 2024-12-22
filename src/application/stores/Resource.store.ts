@@ -4,7 +4,15 @@ import { ResourceTypes } from '../enums/Resource.enum';
 
 export const useResourceStore = defineStore('ResourceStore', {
 	state: () => ({
-		origin: [] as Resource[] | Service[],
+		origin: [
+			{
+				id: '123',
+				namespace: 'space1',
+				name: 'service-a',
+				type: 'service',
+				owner: ['group1', 'team1', 'leader1', 'groupleader1'],
+			},
+		] as Resource[] | Service[],
 		lastUpdated: null as Date | null,
 		loading: false,
 	}),
@@ -16,7 +24,7 @@ export const useResourceStore = defineStore('ResourceStore', {
 				namespace: namespace,
 				name: name,
 				type: type,
-			};
+			} as Resource;
 			this.origin = [resource, ...this.origin.slice()];
 
 			// const response = (await $fetch('/api/resources/create', {
@@ -46,11 +54,20 @@ export const useResourceStore = defineStore('ResourceStore', {
 			this.loading = false;
 		},
 		getResources(): Resource[] | Service[] {
-      console.log('Resource getResources');
-      if (this.lastUpdated === null || this.lastUpdated < new Date(Date.now() - 8000)) {
-        this.loadResources();
-      }
-      return this.origin;
-    },
-	}
+			console.log('Resource getResources');
+			if (
+				this.lastUpdated === null ||
+				this.lastUpdated < new Date(Date.now() - 8000)
+			) {
+				this.loadResources();
+			}
+			return this.origin;
+		},
+	},
+	getters: {
+		getResourceByKey: (state) => (key: number) => {
+			console.log('Resource getResourceByKey');
+			return state.origin[key];
+		},
+	},
 });

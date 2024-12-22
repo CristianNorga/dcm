@@ -8,21 +8,36 @@ export default defineEventHandler(async (event) => {
 				namespace: 'space1',
 				name: 'service-a',
 				type: 'service',
-				owner: 'team1',
+				infrastructure: 'cloud',
+				owner: ['group1', 'team1', 'leader1', 'groupleader1'],
+				tags: ['tag1', 'tag2', 'tag3'],
+				dynamic: {
+					coverage: '90%',
+				},
 			},
 			{
 				id: '124',
 				namespace: 'space1',
 				name: 'service-b',
 				type: 'service',
-				owner: 'team1',
+				infrastructure: 'cloud',
+				owner: ['group1', 'team1', 'leader1', 'groupleader1'],
+				tags: ['tag1', 'tag2', 'tag3'],
+				dynamic: {
+					coverage: '90%',
+				},
 			},
 			{
 				id: '125',
 				namespace: 'space1',
 				name: 'service-c',
 				type: 'service',
-				owner: 'team2',
+				infrastructure: 'cloud',
+				owner: ['group1', 'team1', 'leader1', 'groupleader1'],
+				tags: ['tag1', 'tag2', 'tag3'],
+				dynamic: {
+					coverage: '90%',
+				},
 			},
 		];
 		// await ResourceSchema.find();

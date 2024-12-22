@@ -24,7 +24,7 @@ export default defineNuxtConfig({
 		'@stores': path.resolve(__dirname, './src/application/stores'),
 		'@enums': path.resolve(__dirname, './src/application/enums'),
 		'@interfaces': path.resolve(__dirname, './src/application/interfaces'),
-		'@types': path.resolve(__dirname, './src/application/types'),
+		'_types': path.resolve(__dirname, './src/application/types'),
 		'@entities': path.resolve(__dirname, './src/application/entities'),
 		'@components': path.resolve(__dirname, './src/presentation/components'),
 	},
@@ -54,5 +54,5 @@ export default defineNuxtConfig({
 		viewer: true,
 	},
 	// debug: true,
-	devtools: { enabled: true },
+	devtools: { enabled: false },
 });
